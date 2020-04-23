@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 import random
 from tqdm import tqdm
-from Eden_2D.Drawing import draw_barcode, draw_polyomino, draw_polyomino_holes
-from Eden_2D.Grow_Eden_Supplementary_Functions import start_eden_2d, actualize_neighbors, neighbours, actualize_vef, \
-    increment_betti_1, increment_betti_2, barcode_forest
+from Drawing import draw_barcode, draw_polyomino, draw_polyomino_holes
+from Grow_Eden_Supplementary_Functions import start_eden_2d, actualize_neighbors, neighbours_diag, actualize_vef, \
+    increment_betti_1_euler, increment_betti_1, barcode_forest
 
 """
 Created on Thu Feb 13 19:04:05 2020
@@ -34,10 +34,10 @@ def grow_eden(t):
     vertices = 4
     edges = 4
 
-    eden, perimeter = start_eden_2d()
-    process = [(0, 0)]
+    eden, perimeter = start_eden_2d()  # perimeter is an array consisting of all tiles that are on the perimeter
+    process = [(0, 0)]  # an array consisting of all tiles that were added
 
-    perimeter_len = []
+    perimeter_len = []  # an array consisting of perimeter lengths on every time step
     holes = {}
     total_holes = 0
     barcode = {}
@@ -49,9 +49,8 @@ def grow_eden(t):
     betti_1_total_vector = [0]
 
     for i in tqdm(range(1, t)):
-        l = len(perimeter)
-        perimeter_len = perimeter_len + [l]
-        x = random.randint(0, l - 1)
+        perimeter_len = perimeter_len + [len(perimeter)]
+        x = random.randint(0, len(perimeter) - 1)
 
         tile_selected = perimeter[x]
         process = process + [tile_selected]
@@ -59,17 +58,19 @@ def grow_eden(t):
         perimeter.pop(x)
         eden[tile_selected][0] = 1
 
-        eden, perimeter, nearest_n, nearest_n_tiles = actualize_neighbors(tile_selected, eden, perimeter)
-        n = neighbours(eden, tile_selected)
+        eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter)
+        nearest_diag_tiles = neighbours_diag(eden, tile_selected)
 
-        vertices, edges = actualize_vef(vertices, edges, nearest_n, n)
-        betti_1, total_holes, eden, barcode, holes, created_holes, tags = increment_betti_2(eden, tile_selected,
+        vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag_tiles)
+        betti_1, total_holes, eden, barcode, holes, created_holes, tags = increment_betti_1(eden, tile_selected,
                                                                                             nearest_n,
-                                                                                            nearest_n_tiles, barcode, i,
+                                                                                            nearest_neighbour_tiles, barcode, i,
                                                                                             holes, total_holes,
                                                                                             created_holes, tags)
+        # print('betti_1: ', betti_1)
+        # draw_polyomino(eden, 0)
         betti_1_vector_changes = betti_1_vector_changes + [betti_1]
-        betti_1_total = betti_1_total + betti_1
+        betti_1_total += betti_1
         betti_1_total_vector = betti_1_total_vector + [betti_1_total]
 
         # final_barcode = barcode_forest(barcode, tags)
@@ -94,10 +95,10 @@ def grow_eden_debugging(t, ordered_tiles):
     created_holes = []
     tags = []
 
-    betti_2_total = 0
-    betti_2_vector = []
     betti_1_total = 0
-    betti_1_total_vector = []
+    betti_1_vector = []
+    betti_1_euler_total = 0
+    betti_1_euler_total_vector = []
 
     for i in range(1, t):
         tile_selected = ordered_tiles[i]
@@ -105,22 +106,22 @@ def grow_eden_debugging(t, ordered_tiles):
         eden[tile_selected][0] = 1
 
         eden, perimeter, nearest_n, nearest_n_tiles = actualize_neighbors(tile_selected, eden, perimeter)
-        n = neighbours(eden, tile_selected)
+        n = neighbours_diag(eden, tile_selected)
 
         vertices, edges = actualize_vef(vertices, edges, nearest_n, n)
-        betti_2, total_holes, eden, barcode, holes, created_holes, tags = increment_betti_2(eden, tile_selected,
+        betti_1, total_holes, eden, barcode, holes, created_holes, tags = increment_betti_1(eden, tile_selected,
                                                                                             nearest_n,
                                                                                             nearest_n_tiles, barcode, i,
                                                                                             holes, total_holes,
                                                                                             created_holes, tags)
-        betti_2_vector = betti_2_vector + [betti_2]
-        betti_2_total = betti_2_total + betti_2
+        betti_1_vector = betti_1_vector + [betti_1]
+        betti_1_total = betti_1_total + betti_1
 
-        betti_1_total_vector = increment_betti_1(vertices, edges, i, betti_2_total)
+        betti_1_euler_total = increment_betti_1_euler(vertices, edges, i)
 
         final_barcode = barcode_forest(barcode, tags)
 
-    return eden, perimeter, betti_2_vector, betti_1_total_vector, barcode, holes, betti_2_total, betti_1_total, created_holes, tags, final_barcode
+    return eden, perimeter, betti_1_vector, betti_1_euler_total_vector, barcode, holes, betti_1_total, betti_1_euler_total, created_holes, tags, final_barcode
 
 
 #####################
@@ -133,4 +134,7 @@ Eden, Perimeter, Betti_1_total_vector, Betti_1_vector_changes, Barcode, Holes, B
 # draw_polyomino(Eden, Time)
 print('betti_1: ', Betti_1_total)
 print('perimeter: ', Perimeter_len[-1])
+# eden, perimeter, betti_1_vector, betti_1_euler_total_vector, barcode, holes, betti_1_total, betti_1_euler_total, created_holes, tags, final_barcode\
+#     = grow_eden_debugging(Time, Process)
+# print(betti_1_total, betti_1_euler_total)
 
