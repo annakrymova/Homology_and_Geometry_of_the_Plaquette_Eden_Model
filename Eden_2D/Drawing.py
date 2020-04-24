@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 
+
 def draw_square(x, y, col='gray', ls=0.35):
     """With center at x, y draw a square of area 1"""
     """it's area is actually 4ls^2, isn't it?"""
