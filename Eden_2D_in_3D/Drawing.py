@@ -46,7 +46,7 @@ def add_box(eden, ax):
     ax.set_zlim(mid_z - max_range, mid_z + max_range)
 
 
-def draw(eden, time, tile):
+def draw_eden(eden, time, tile):
     plt.style.use('ggplot')
     fig = plt.figure()
     ax = fig.gca(projection='3d')
@@ -59,7 +59,23 @@ def draw(eden, time, tile):
         if eden[x][0] == 1:
             draw_square(x[0], x[1], x[2], x[3], ax=ax, col='gray')
     draw_square(0, 0, 0, 2, ax=ax, col='green')
-    # draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, alpha=1, col='orange')
+    #draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, alpha=1, col='orange')
     plt.savefig('pictures/eden_' + str(time) + '.svg', format='svg', dpi=1200)
     plt.show()
 
+
+def draw_complex(eden, time, tile):
+    plt.style.use('ggplot')
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.axis('off')
+    # ax.grid(True)
+
+    #add_box(eden, ax)
+
+    for x in eden:
+        draw_square(x[0], x[1], x[2], x[3], ax=ax, col='gray')
+    draw_square(0, 0, 0, 2, ax=ax, col='green')
+    # draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, alpha=1, col='orange')
+    plt.savefig('pictures/eden_' + str(time) + '.svg', format='svg', dpi=1200)
+    plt.show()
