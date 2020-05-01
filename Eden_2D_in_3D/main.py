@@ -22,16 +22,20 @@ def grow_eden(t):
     v = nearest_voids(process[0])
     c = nearest_cubes(process[0])
     voids = {v[0]: [0, [0, 0, 0, 0, 1, 0]], v[1]: [0, [0, 0, 0, 0, 0, 1]]}
+    """dictionary, its items are (x,y,z): [filled, [f0, f1, f2, f3, f4, f5]]
+    where (x,y,z) is cube's center
+    filled = 1 if all cube's faces are in complex
+    f0 = 1 if the face number 0 in in complex amd so on """
 
-    holes = {}
+    holes = {}  # dictionary containing all VOIDS that create holes
     total_holes = 0
     barcode = {}
     created_holes = []
     tags = []
 
-    betti_1_total = 0
-    betti_1_vector_changes = [0]
-    betti_1_total_vector = [0]
+    betti_2_total = 0
+    betti_2_vector_changes = [0]
+    betti_2_total_vector = [0]
 
     for i in tqdm(range(1, t)):
         perimeter_len = perimeter_len + [len(perimeter)]
@@ -50,7 +54,8 @@ def grow_eden(t):
         eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter, shift_neighbours)
         nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
         vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
-        # b = increment_betti_2(eden, tile_selected)
+
+        betti_2 = increment_betti_2(eden, tile_selected, voids)
 
     perimeter_len = perimeter_len + [len(perimeter)]
 
