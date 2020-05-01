@@ -67,11 +67,13 @@ def grow_eden(t):
     return eden, perimeter, process, perimeter_len  # , tags, final_barcode
 
 
-def increment_betti_2(eden, tile_selected):  # , nearest_n, nearest_n_tiles):
+def increment_betti_2(eden, tile_selected, voids):  # , nearest_n, nearest_n_tiles):
     """betti_2 can increase only"""
     tile = np.array(tile_selected)
+    #  todo: probably we can delete the hole variable from eden dictionary and add it to void dictionary.
+    #   or leave it in both dictionaries. THINK ABOUT IT!
     if eden[tile_selected][2] == 0:
-        per = 1  # This is 1 if the tile added was in the out perimeter
+        per = 1  # This is 1 if the tile added doesn't create a hole
     else:
         num_hole = eden[tile_selected][2]
         per = 0
@@ -81,13 +83,50 @@ def increment_betti_2(eden, tile_selected):  # , nearest_n, nearest_n_tiles):
     c_2 = check_cube_in_eden(cube_2, eden)
     if c_1 or c_2:
         betti_2 += 1
-        draw(eden, 0, tile_selected)
-    else:
-        num_possible_components = 2
-        bds = nearest_voids(tile)
-        iterations = 0
+        draw_eden(eden, 0, tile_selected)
+        a = 5
+
+    num_possible_components = 2
+    bfs = nearest_voids(tile)
+    bfs = [[bfs[0]], [bfs[1]]]
+
+    iterations = 0
+    finished = [0] * num_possible_components
+    merged = finished.copy()
+    while sum(finished) < num_possible_components - per:
+        for j in range(0, num_possible_components):
+            if finished[j] == 0:
+                bfs, merged, finished = add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids)
+                if (iterations + 1) == len(bfs[j]):  # the hole is filled
+                    finished[j] = 1
+            iterations = iterations + 1
 
     return betti_2
+
+
+def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
+    void_selected = bfs[j][iterations]
+    faces = voids[void_selected][1]
+    for i, face in enumerate(faces):
+        if face == 0:
+            direction = int(i/2)
+            if i % 2 == 1:
+                sign = 1
+            else:
+                sign = -1
+            shift = [0., 0., 0.]
+            shift[direction] = sign
+            new_void = tuple(np.array(void_selected)+shift)
+            bfs[j] += [new_void]
+            # update merge/finish
+            if new_void in bfs[1-j]:  # if j new_void in the second part of gas
+                if 1-j < j:
+                    merged[j] = 1
+                    finished[j] = 1
+                if 1-j > j:
+                    merged[1-j] = 1
+                    finished[1-j] = 1
+    return bfs, merged, finished
 
 
 c1, c2 = nearest_cubes((0, 0, 0, 2))
@@ -97,7 +136,7 @@ Time = 1000
 Eden, Perimeter, Process, Perimeter_len = grow_eden(Time)
 # Nearest_diag, tiles = neighbours_diag([0, 0, 0, 2], Eden)
 # increment_betti_2(Eden, (0, 0, 0, 2))
-draw(Eden, Time, '')
+draw_eden(Eden, Time, '')
 print('hi')
 
 
