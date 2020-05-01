@@ -4,7 +4,8 @@ import numpy as np
 from Supplementary_functions import start_eden_2d_in_3d, actualize_neighbors, neighbours_diag, actualize_vef, nearest_cubes, \
                              nearest_voids, dimension, shift_for_neighbors, shift_for_neighbours_diag, check_cube_in_eden, update_void_dict
 
-from Drawing import draw, draw_square
+from Drawing import draw_eden, draw_complex, draw_square
+import sys
 
 
 def grow_eden(t):
@@ -51,6 +52,10 @@ def grow_eden(t):
         voids[v[0]] = [int(sum(faces[0])/6), faces[0]]
         voids[v[1]] = [int(sum(faces[1])/6), faces[1]]
 
+        # check that voids dictionary corresponds to real complex
+        total_faces = sum(np.array(list(voids.values()))[:, 1].sum())
+        if total_faces != 2*len(process):
+            sys.exit('Something wrong with void function')
         eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter, shift_neighbours)
         nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
         vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
