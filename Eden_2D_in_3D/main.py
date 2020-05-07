@@ -96,8 +96,8 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes):  # , near
 
     iterations = 0
     finished = [0] * num_possible_components
-    merged = finished.copy()
-    while sum(finished) < num_possible_components - per:
+    merged = False
+    while sum(finished) < num_possible_components - per and not merged:
         for j in range(0, num_possible_components):
             if finished[j] == 0:
                 bfs, merged, finished = add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids)
@@ -123,13 +123,10 @@ def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
             new_void = tuple(np.array(void_selected)+shift)
             bfs[j] += [new_void]
             # update merge/finish
-            if new_void in bfs[1-j]:  # if j new_void in the second part of gas
-                if 1-j < j:
-                    merged[j] = 1
-                    finished[j] = 1
-                if 1-j > j:
-                    merged[1-j] = 1
-                    finished[1-j] = 1
+            if new_void in bfs[1 - j]:  # if j new_void in the second part of gas
+                # print()
+                merged = True
+                finished[1] = 1
     return bfs, merged, finished
 
 
