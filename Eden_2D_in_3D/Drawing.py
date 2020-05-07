@@ -15,7 +15,7 @@ def draw_square(x0, y0, z0, d, ax, alpha=0.5, col='gray', ls=0.45):
         x = np.ones((y.shape[0], y.shape[1])) * x0
         ax.plot_surface(x, y, z, color=col, alpha=alpha, linewidth=0, antialiased=True)
     if d == 1:
-        col = 'red'
+        # col = 'red'
         x = np.linspace(x0-ls, x0+ls, num=2)
         z = x + z0 - x0
         x, z = np.meshgrid(x, z)
@@ -29,7 +29,7 @@ def draw_square(x0, y0, z0, d, ax, alpha=0.5, col='gray', ls=0.45):
         ax.plot_surface(x, y, z, color=col, alpha=alpha, linewidth=0, antialiased=True)
 
 
-def add_box(eden, ax):
+def add_box(eden, ax, max_range=5):
     # Create cubic bounding box to simulate equal aspect ratio
     points = np.array([x for x in eden if eden[x][0] == 1])
     x = points[:, 0]
@@ -46,7 +46,7 @@ def add_box(eden, ax):
     ax.set_zlim(mid_z - max_range, mid_z + max_range)
 
 
-def draw_eden(eden, time, tile):
+def draw_eden(eden, time):
     plt.style.use('ggplot')
     fig = plt.figure()
     ax = fig.gca(projection='3d')
@@ -59,7 +59,6 @@ def draw_eden(eden, time, tile):
         if eden[x][0] == 1:
             draw_square(x[0], x[1], x[2], x[3], ax=ax, col='gray')
     draw_square(0, 0, 0, 2, ax=ax, col='green')
-    #draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, alpha=1, col='orange')
     plt.savefig('pictures/eden_' + str(time) + '.svg', format='svg', dpi=1200)
     plt.show()
 
@@ -71,11 +70,12 @@ def draw_complex(eden, time, tile):
     ax.axis('off')
     # ax.grid(True)
 
-    #add_box(eden, ax)
+    add_box(eden, ax, 5)
 
     for x in eden:
-        draw_square(x[0], x[1], x[2], x[3], ax=ax, col='gray')
+        if eden[x][0] == 1:
+            draw_square(x[0], x[1], x[2], x[3], ax=ax, col='gray')
     draw_square(0, 0, 0, 2, ax=ax, col='green')
-    # draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, alpha=1, col='orange')
+    draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, alpha=1, col='orange')
     plt.savefig('pictures/eden_' + str(time) + '.svg', format='svg', dpi=1200)
     plt.show()
