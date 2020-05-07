@@ -76,22 +76,22 @@ def grow_eden(t):
 def increment_betti_2(eden, tile_selected, voids, total_holes, holes):  # , nearest_n, nearest_n_tiles):
     """betti_2 can increase only"""
     tile = np.array(tile_selected)
-    #  todo: probably we can delete the hole variable from eden dictionary and add it to void dictionary.
-    #   or leave it in both dictionaries. THINK ABOUT IT!
-    if eden[tile_selected][2] == 0:
-        per = 1  # This is 1 if the tile added doesn't create a hole
-    else:
-        num_hole = eden[tile_selected][2]
-        per = 0
-    betti_2 = 0
-    cube_1, cube_2 = nearest_cubes(tile)
-    c_1 = check_cube_in_eden(cube_1, eden)
-    c_2 = check_cube_in_eden(cube_2, eden)
-    if c_1 or c_2:
-        betti_2 += 1
-        draw_eden(eden, 0, tile_selected)
-        a = 5
 
+    non_trivial_holes_0 = np.array([holes[x] for x in holes if len(holes[x]) > 1])
+    non_trivial_holes = []
+    for x in non_trivial_holes_0:
+        non_trivial_holes = non_trivial_holes + list(x)
+    non_trivial_holes = [tuple(x) for x in non_trivial_holes]
+    v = nearest_voids(tile)
+
+    if v[0] in non_trivial_holes:
+        per = 0
+        num_hole = [x for x in holes if v[0] in holes[x]][0]
+    elif v[1] in non_trivial_holes:
+        per = 0
+        num_hole = [x for x in holes if v[1] in holes[x]][0]
+    else:
+        per = 1
     num_possible_components = 2
     bfs = nearest_voids(tile)
     bfs = [[bfs[0]], [bfs[1]]]
@@ -105,9 +105,27 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes):  # , near
                 bfs, merged, finished = add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids)
                 if (iterations + 1) == len(bfs[j]):  # the hole is filled
                     finished[j] = 1
-            iterations = iterations + 1
-
-    return betti_2
+        iterations += 1
+    betti_2 = 1 - int(merged)
+    
+    # if betti_2 == 0 literally nothing happens
+    if betti_2 == 1:
+        if per == 0:
+            holes.pop(num_hole)
+            for i in range(num_possible_components):
+                if finished[i] == 1:
+                    total_holes = total_holes + 1
+                    holes[total_holes] = bfs[i].copy()
+                    for void in bfs[i]:
+                        voids[void][2] = total_holes
+        else:
+            for i in range(num_possible_components):
+                if finished[i] == 1:
+                    total_holes += 1
+                    holes[total_holes] = bfs[i].copy()
+                    for void in bfs[i]:
+                        voids[void][2] = total_holes
+    return betti_2, total_holes, eden, holes, voids
 
 
 def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
