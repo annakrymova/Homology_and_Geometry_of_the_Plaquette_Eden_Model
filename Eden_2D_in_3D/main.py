@@ -42,6 +42,7 @@ def grow_eden(t):
         perimeter_len = perimeter_len + [len(perimeter)]
         x = random.randint(0, len(perimeter) - 1)
         tile_selected = perimeter[x]
+
         process = process + [tile_selected]
         perimeter.pop(x)
         eden[tile_selected][0] = 1
@@ -57,7 +58,8 @@ def grow_eden(t):
         total_faces = sum(np.array(list(voids.values()))[:, 1].sum())
         if total_faces != 2 * len(process):
             sys.exit('Something wrong with void function')
-        eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter, shift_neighbours)
+        eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter,
+                                                                                  shift_neighbours)
         nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
         vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
 
@@ -110,10 +112,13 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes):  # , near
 
 def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
     void_selected = bfs[j][iterations]
-    faces = voids[void_selected][1]
+    if void_selected in voids:
+        faces = voids[void_selected][1]
+    else:
+        faces = [0] * 6
     for i, face in enumerate(faces):
         if face == 0:
-            direction = int(i/2)
+            direction = int(i / 2)
             if i % 2 == 1:
                 sign = 1
             else:
