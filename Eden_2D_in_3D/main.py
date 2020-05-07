@@ -1,8 +1,9 @@
 from tqdm import tqdm
 import random
 import numpy as np
-from Supplementary_functions import start_eden_2d_in_3d, actualize_neighbors, neighbours_diag, actualize_vef, nearest_cubes, \
-                             nearest_voids, dimension, shift_for_neighbors, shift_for_neighbours_diag, check_cube_in_eden, update_void_dict
+from Supplementary_functions import start_eden_2d_in_3d, actualize_neighbors, neighbours_diag, actualize_vef, \
+    nearest_cubes, \
+    nearest_voids, dimension, shift_for_neighbors, shift_for_neighbours_diag, check_cube_in_eden, update_void_dict
 
 from Drawing import draw_eden, draw_complex, draw_square
 import sys
@@ -54,20 +55,23 @@ def grow_eden(t):
 
         # check that voids dictionary corresponds to real complex
         total_faces = sum(np.array(list(voids.values()))[:, 1].sum())
-        if total_faces != 2*len(process):
+        if total_faces != 2 * len(process):
             sys.exit('Something wrong with void function')
         eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter, shift_neighbours)
         nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
         vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
 
-        betti_2 = increment_betti_2(eden, tile_selected, voids)
+        betti_2, total_holes, eden, holes, voids = increment_betti_2(eden, tile_selected, voids, total_holes, holes)
+        
+        betti_2_vector_changes = betti_2_vector_changes + [betti_2]
+        betti_2_total = betti_2_total + betti_2
 
     perimeter_len = perimeter_len + [len(perimeter)]
 
-    return eden, perimeter, process, perimeter_len  # , tags, final_barcode
+    return eden, perimeter, process, perimeter_len, betti_2_vector_changes, betti_2_total  # , tags, final_barcode
 
 
-def increment_betti_2(eden, tile_selected, voids):  # , nearest_n, nearest_n_tiles):
+def increment_betti_2(eden, tile_selected, voids, total_holes, holes):  # , nearest_n, nearest_n_tiles):
     """betti_2 can increase only"""
     tile = np.array(tile_selected)
     #  todo: probably we can delete the hole variable from eden dictionary and add it to void dictionary.
