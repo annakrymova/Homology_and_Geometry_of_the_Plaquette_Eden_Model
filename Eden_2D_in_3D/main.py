@@ -21,8 +21,7 @@ def grow_eden(t):
     shift_diag_neighbours = [shift_for_neighbours_diag(0), shift_for_neighbours_diag(1), shift_for_neighbours_diag(2)]
 
     v = nearest_voids(process[0])
-    c = nearest_cubes(process[0])
-    voids = {v[0]: [0, [0, 0, 0, 0, 1, 0]], v[1]: [0, [0, 0, 0, 0, 0, 1]]}
+    voids = {v[0]: [0, [0, 0, 0, 0, 1, 0], 0], v[1]: [0, [0, 0, 0, 0, 0, 1], 0]}
     """dictionary, its items are (x,y,z): [filled, [f0, f1, f2, f3, f4, f5]]
     where (x,y,z) is cube's center
     filled = 1 if all cube's faces are in complex
@@ -49,8 +48,9 @@ def grow_eden(t):
         v = nearest_voids(tile_selected)
         c = nearest_cubes(tile_selected)
         faces = update_void_dict(v, c, eden)
-        voids[v[0]] = [int(sum(faces[0])/6), faces[0]]
-        voids[v[1]] = [int(sum(faces[1])/6), faces[1]]
+        # print(faces)
+        voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0]
+        voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0]
 
         # check that voids dictionary corresponds to real complex
         total_faces = sum(np.array(list(voids.values()))[:, 1].sum())
