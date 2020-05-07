@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 
 
 def dimension(coordinates):
@@ -224,20 +225,12 @@ def update_void_dict(v, c, eden):
         for face in c[j]:
             if face in eden:
                 if eden[face][0] == 1:
-                    if face[3] == 0:
-                        if face[0] < void[0]:
-                            faces[j][0] = 1
-                        else:
-                            faces[j][1] = 1
-                    if face[3] == 1:
-                        if face[1] < void[1]:
-                            faces[j][2] = 1
-                        else:
-                            faces[j][3] = 1
-                    if face[3] == 2:
-                        if face[2] < void[2]:
-                            faces[j][4] = 1
-                        else:
-                            faces[j][5] = 1
-                    a = 5
+                    for i in range(3):
+                        if face[3] == i:
+                            if face[i] < void[i]:
+                                faces[j][2*i] = 1
+                            else:
+                                faces[j][2*i+1] = 1
+                            if face[i] == void[i]:
+                                sys.exit('Something wrong with update_void_dict')
     return faces
