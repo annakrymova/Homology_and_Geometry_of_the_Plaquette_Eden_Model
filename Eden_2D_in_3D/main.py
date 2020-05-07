@@ -125,8 +125,9 @@ def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
                 sign = -1
             shift = [0., 0., 0.]
             shift[direction] = sign
-            new_void = tuple(np.array(void_selected)+shift)
-            bfs[j] += [new_void]
+            new_void = tuple(np.array(void_selected) + shift)
+            if new_void not in bfs[j]:
+                bfs[j] += [new_void]
             # update merge/finish
             if new_void in bfs[1 - j]:  # if j new_void in the second part of gas
                 # print()
