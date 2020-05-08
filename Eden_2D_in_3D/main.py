@@ -84,12 +84,9 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes):  # , near
     non_trivial_holes = [tuple(x) for x in non_trivial_holes]
     v = nearest_voids(tile)
 
-    if v[0] in non_trivial_holes:
+    if v[0] in non_trivial_holes:  # if it's true then v[1] is in the same hole
         per = 0
         num_hole = [x for x in holes if v[0] in holes[x]][0]
-    elif v[1] in non_trivial_holes:
-        per = 0
-        num_hole = [x for x in holes if v[1] in holes[x]][0]
     else:
         per = 1
     num_possible_components = 2
