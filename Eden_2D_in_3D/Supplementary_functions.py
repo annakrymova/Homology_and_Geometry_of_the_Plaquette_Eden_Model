@@ -21,19 +21,19 @@ def start_eden_2d_in_3d():
     b = number of neighbours already in the complex (from 0 to 12)
     c = 1 if tile is a part of a hole"""
     """perimeter is a layer of the squares lying on the perimeter (but not yet it the complex)"""
-    eden = {(0, 0, 0, 2): [1, 0, 0],
-            (1, 0, 0, 2): [0, 1, 0],
-            (-1, 0, 0, 2): [0, 1, 0],
-            (0, 1, 0, 2): [0, 1, 0],
-            (0, -1, 0, 2): [0, 1, 0],
-            (0.5, 0, 0.5, 0): [0, 1, 0],
-            (0, 0.5, 0.5, 1): [0, 1, 0],
-            (-0.5, 0, 0.5, 0): [0, 1, 0],
-            (0, -0.5, 0.5, 1): [0, 1, 0],
-            (0.5, 0, -0.5, 0): [0, 1, 0],
-            (0, 0.5, -0.5, 1): [0, 1, 0],
-            (-0.5, 0, -0.5, 0): [0, 1, 0],
-            (0, -0.5, -0.5, 1): [0, 1, 0]}
+    eden = {(0, 0, 0, 2): [1, 0],
+            (1, 0, 0, 2): [0, 1],
+            (-1, 0, 0, 2): [0, 1],
+            (0, 1, 0, 2): [0, 1],
+            (0, -1, 0, 2): [0, 1],
+            (0.5, 0, 0.5, 0): [0, 1],
+            (0, 0.5, 0.5, 1): [0, 1],
+            (-0.5, 0, 0.5, 0): [0, 1],
+            (0, -0.5, 0.5, 1): [0, 1],
+            (0.5, 0, -0.5, 0): [0, 1],
+            (0, 0.5, -0.5, 1): [0, 1],
+            (-0.5, 0, -0.5, 0): [0, 1],
+            (0, -0.5, -0.5, 1): [0, 1]}
     perimeter = list(eden.keys())
     perimeter.remove((0, 0, 0, 2))
     return eden, perimeter
@@ -82,7 +82,7 @@ def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors):
                 if diff_nearest_tiles[i][directions[0]] < 0:
                     nearest_n[3] = 1
         else:
-            eden[n] = [0, 1, eden[tile_selected][2]]
+            eden[n] = [0, 1]
             perimeter = perimeter + [n]
     return eden, perimeter, nearest_n, nearest_tiles
 
