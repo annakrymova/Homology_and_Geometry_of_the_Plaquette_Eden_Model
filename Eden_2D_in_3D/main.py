@@ -5,7 +5,7 @@ from Supplementary_functions import start_eden_2d_in_3d, actualize_neighbors, ne
     nearest_cubes, \
     nearest_voids, dimension, shift_for_neighbors, shift_for_neighbours_diag, check_cube_in_eden, update_void_dict
 
-from Drawing import draw_eden, draw_complex, draw_square
+from Drawing import draw_eden, draw_complex, draw_square, draw_barcode
 import sys
 
 
@@ -23,14 +23,16 @@ def grow_eden(t):
 
     v = nearest_voids(process[0])
     voids = {v[0]: [0, [0, 0, 0, 0, 1, 0], 0], v[1]: [0, [0, 0, 0, 0, 0, 1], 0]}
-    """dictionary, its items are (x,y,z): [filled, [f0, f1, f2, f3, f4, f5]]
+    """dictionary, its items are (x,y,z): [filled, [f0, f1, f2, f3, f4, f5], h]
     where (x,y,z) is cube's center
     filled = 1 if all cube's faces are in complex
-    f0 = 1 if the face number 0 in in complex amd so on """
+    f0 = 1 if the face number 0 in in complex amd so on
+    h = 1 if the void is in a hole """
 
     holes = {}  # dictionary containing all VOIDS that create holes
     total_holes = 0
     barcode = {}
+    """dictionary, num_hole: [start_time, end_time]"""
     created_holes = []
     tags = []
 
@@ -65,8 +67,9 @@ def grow_eden(t):
 
         betti_2, total_holes, eden, holes, voids = increment_betti_2(eden, tile_selected, voids, total_holes, holes)
         
-        betti_2_vector_changes = betti_2_vector_changes + [betti_2]
-        betti_2_total = betti_2_total + betti_2
+        betti_2_vector_changes += [betti_2]
+        betti_2_total += + betti_2
+        betti_2_total_vector += [betti_2_total]
 
     perimeter_len = perimeter_len + [len(perimeter)]
 
