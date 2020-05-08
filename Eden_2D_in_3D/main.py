@@ -65,7 +65,7 @@ def grow_eden(t):
         nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
         vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
 
-        betti_2, total_holes, eden, holes, voids = increment_betti_2(eden, tile_selected, voids, total_holes, holes)
+        betti_2, total_holes, eden, holes, voids, barcode = increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, i)
         
         betti_2_vector_changes += [betti_2]
         betti_2_total += + betti_2
@@ -73,10 +73,10 @@ def grow_eden(t):
 
     perimeter_len = perimeter_len + [len(perimeter)]
 
-    return eden, perimeter, process, perimeter_len, betti_2_vector_changes, betti_2_total  # , tags, final_barcode
+    return eden, perimeter, process, perimeter_len, betti_2_vector_changes, betti_2_total, betti_2_total_vector, barcode  # , tags, final_barcode
 
 
-def increment_betti_2(eden, tile_selected, voids, total_holes, holes):  # , nearest_n, nearest_n_tiles):
+def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time):  # , nearest_n, nearest_n_tiles):
     """betti_2 can increase only"""
     tile = np.array(tile_selected)
 
@@ -112,12 +112,14 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes):  # , near
     if betti_2 == 1:
         if per == 0:
             holes.pop(num_hole)
+            barcode[num_hole][1] = time + 1
             for i in range(num_possible_components):
                 if finished[i] == 1:
-                    total_holes = total_holes + 1
+                    total_holes += 1
                     holes[total_holes] = bfs[i].copy()
                     for void in bfs[i]:
                         voids[void][2] = total_holes
+                    barcode[total_holes] = [time + 1, 0]
         else:
             for i in range(num_possible_components):
                 if finished[i] == 1:
@@ -125,7 +127,8 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes):  # , near
                     holes[total_holes] = bfs[i].copy()
                     for void in bfs[i]:
                         voids[void][2] = total_holes
-    return betti_2, total_holes, eden, holes, voids
+                    barcode[total_holes] = [time + 1, 0]
+    return betti_2, total_holes, eden, holes, voids, barcode
 
 
 def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
