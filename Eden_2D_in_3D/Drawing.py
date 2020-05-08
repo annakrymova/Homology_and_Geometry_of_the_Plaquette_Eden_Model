@@ -79,3 +79,23 @@ def draw_complex(eden, time, tile):
     draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, alpha=1, col='orange')
     plt.savefig('pictures/eden_' + str(time) + '.svg', format='svg', dpi=1200)
     plt.show()
+
+
+def draw_barcode(barcode, time):
+    fig = plt.figure()
+    plt.style.use('ggplot')
+    # plt.axis('off')
+    plt.grid(True)
+    plt.rc('grid', linestyle="-", color='gray')
+    plt.yticks([])
+    plt.gca().set_aspect('equal', adjustable='box')
+    i = 0
+    for x in barcode:
+        if barcode[x][1] == 0:
+            plt.plot([barcode[x][0], time], [i, i], 'k-', lw=2)
+        else:
+            plt.plot([barcode[x][0], barcode[x][1]], [i, i], 'k-', lw=2)
+        i = i + 40
+    fig.savefig('pictures/barcode_'+str(time)+'.svg', format='svg', dpi=1200)
+    plt.show()
+
