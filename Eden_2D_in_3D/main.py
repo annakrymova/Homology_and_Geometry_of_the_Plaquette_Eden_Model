@@ -2,8 +2,9 @@ from tqdm import tqdm
 import random
 import numpy as np
 from Supplementary_functions import start_eden_2d_in_3d, actualize_neighbors, neighbours_diag, actualize_vef, \
-    nearest_cubes, \
-    nearest_voids, dimension, shift_for_neighbors, shift_for_neighbours_diag, check_cube_in_eden, update_void_dict
+    nearest_cubes, nearest_voids, dimension, shift_for_neighbors, shift_for_neighbours_diag, \
+    check_cube_in_eden, update_void_dict, shift_vertices, return_vertices, euler_characteristic, \
+    return_betti_1
 
 from Drawing import draw_eden, draw_complex, draw_square, draw_barcode
 import sys
@@ -40,6 +41,8 @@ def grow_eden(t):
     betti_2_vector_changes = [0]
     betti_2_total_vector = [0]
 
+    betti_1_total_vector = [0]
+
     for i in tqdm(range(1, t)):
         perimeter_len = perimeter_len + [len(perimeter)]
         x = random.randint(0, len(perimeter) - 1)
@@ -71,9 +74,13 @@ def grow_eden(t):
         betti_2_total += + betti_2
         betti_2_total_vector += [betti_2_total]
 
+        euler_character = euler_characteristic(vertices, edges, i + 1)
+        betti_1_total = return_betti_1(betti_2_total, euler_character)
+        betti_1_total_vector += [betti_1_total]
+
     perimeter_len = perimeter_len + [len(perimeter)]
 
-    return eden, perimeter, process, perimeter_len, betti_2_vector_changes, betti_2_total, betti_2_total_vector, barcode  # , tags, final_barcode
+    return eden, perimeter, process, perimeter_len, betti_2_vector_changes, betti_2_total, betti_2_total_vector, barcode, betti_1_total, betti_1_total_vector  # , tags, final_barcode
 
 
 def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time):  # , nearest_n, nearest_n_tiles):
