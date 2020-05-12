@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+from Drawing import draw_eden
 
 
 def dimension(coordinates):
@@ -135,14 +136,15 @@ def neighbours_diag(tile_selected, eden, shift_diag_neighbours):
     nearest_diag = [0] * 4
     for i in range(0, len(nearest_diag_tiles)):
         if nearest_diag_tiles[i] in eden:
-            if np.array_equal((diff_diag_all[i][directions] > 0), [True, True]):
-                nearest_diag[0] = 1
-            if np.array_equal((diff_diag_all[i][directions] > 0), [True, False]):
-                nearest_diag[1] = 1
-            if np.array_equal((diff_diag_all[i][directions] > 0), [False, False]):
-                nearest_diag[2] = 1
-            if np.array_equal((diff_diag_all[i][directions] > 0), [False, True]):
-                nearest_diag[3] = 1
+            if eden[nearest_diag_tiles[i]][0] == 1:
+                if np.array_equal((diff_diag_all[i][directions] > 0), [True, True]):
+                    nearest_diag[0] = 1
+                if np.array_equal((diff_diag_all[i][directions] > 0), [True, False]):
+                    nearest_diag[1] = 1
+                if np.array_equal((diff_diag_all[i][directions] > 0), [False, False]):
+                    nearest_diag[2] = 1
+                if np.array_equal((diff_diag_all[i][directions] > 0), [False, True]):
+                    nearest_diag[3] = 1
     return nearest_diag, nearest_diag_tiles
 
 
@@ -234,3 +236,11 @@ def update_void_dict(v, c, eden):
                             if face[i] == void[i]:
                                 sys.exit('Something wrong with update_void_dict')
     return faces
+
+
+def euler_characteristic(k0, k1, k2):
+    return k0 - k1 + k2
+
+
+def return_betti_1(betti_2, euler_ch):
+    return 1 + betti_2 - euler_ch
