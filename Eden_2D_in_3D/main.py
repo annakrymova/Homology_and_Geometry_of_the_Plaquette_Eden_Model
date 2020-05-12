@@ -15,14 +15,16 @@ def grow_eden(t):
     edges = 4
 
     eden, perimeter = start_eden_2d_in_3d()  # perimeter is an array consisting of all tiles that are on the perimeter
-    process = [(0, 0, 0, 2)]  # an array consisting of all tiles that were added
+
+    shift_for_vertices = shift_vertices(0), shift_vertices(1), shift_vertices(2)
+    process = [return_vertices((0, 0, 0, 2), shift_for_vertices)]  # an array consisting of all tiles that were added (specified by there 4 vertices)
 
     perimeter_len = []  # an array consisting of perimeter lengths at every time step
 
     shift_neighbours = [shift_for_neighbors(0), shift_for_neighbors(1), shift_for_neighbors(2)]
     shift_diag_neighbours = [shift_for_neighbours_diag(0), shift_for_neighbours_diag(1), shift_for_neighbours_diag(2)]
 
-    v = nearest_voids(process[0])
+    v = nearest_voids((0, 0, 0, 2))
     voids = {v[0]: [0, [0, 0, 0, 0, 1, 0], 0], v[1]: [0, [0, 0, 0, 0, 0, 1], 0]}
     """dictionary, its items are (x,y,z): [filled, [f0, f1, f2, f3, f4, f5], h]
     where (x,y,z) is cube's center
@@ -48,7 +50,7 @@ def grow_eden(t):
         x = random.randint(0, len(perimeter) - 1)
         tile_selected = perimeter[x]
 
-        process = process + [tile_selected]
+        process += [return_vertices(tile_selected, shift_for_vertices)]
         perimeter.pop(x)
         eden[tile_selected][0] = 1
 
@@ -61,8 +63,8 @@ def grow_eden(t):
 
         # check that voids dictionary corresponds to real complex
         total_faces = sum(np.array(list(voids.values()))[:, 1].sum())
-        if total_faces != 2 * len(process):
-            sys.exit('Something wrong with void function')
+        # if total_faces != 2 * len(process):
+        #     sys.exit('Something wrong with void function')
         eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter,
                                                                                   shift_neighbours)
         nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)

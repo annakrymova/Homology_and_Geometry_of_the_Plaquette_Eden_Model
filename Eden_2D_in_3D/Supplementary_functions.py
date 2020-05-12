@@ -238,6 +238,24 @@ def update_void_dict(v, c, eden):
     return faces
 
 
+def shift_vertices(third_direction):
+    directions = [0, 1, 2]
+    directions.remove(third_direction)
+    diff = np.array([[1., 1.], [1., -1.], [-1., -1.], [-1., 1.]]) * 0.45
+    shift = np.array([[0.]*3]*4)
+    for i in range(4):
+        shift[i][directions] = diff[i]
+    return shift
+
+
+def return_vertices(tile, shift):
+    center = np.array(tile[:3])
+    third_direction = tile[3]
+    shift = shift[int(third_direction)]
+    vertices = [tuple(x) for x in center+shift]
+    return vertices
+
+
 def euler_characteristic(k0, k1, k2):
     return k0 - k1 + k2
 
