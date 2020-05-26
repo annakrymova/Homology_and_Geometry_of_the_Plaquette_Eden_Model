@@ -52,7 +52,6 @@ def draw_eden(eden, time):
     ax = fig.gca(projection='3d')
     ax.axis('off')
     # ax.grid(True)
-
     add_box(eden, ax)
 
     for x in eden:

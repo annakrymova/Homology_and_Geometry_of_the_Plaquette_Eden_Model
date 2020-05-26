@@ -97,7 +97,7 @@ def grow_eden(t):
            betti_1_total, betti_1_total_vector, created_holes, holes, cubes_perimeter_edge  # , tags, final_barcode
 
 
-def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time):  # , nearest_n, nearest_n_tiles):
+def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time, created_holes):  # , nearest_n, nearest_n_tiles):
     """betti_2 can increase only"""
     tile = np.array(tile_selected)
 
@@ -174,22 +174,16 @@ def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
                 bfs[j] += [new_void]
             # update merge/finish
             if new_void in bfs[1 - j]:  # if j new_void in the second part of gas
-                # print()
                 merged = True
                 finished[1] = 1
     return bfs, merged, finished
 
 
-c1, c2 = nearest_cubes((0, 0, 0, 2))
-# draw(c1+c2, 0)
-# nearest_voids((0, 0, 0, 2))
-Time = 1000
-Eden, Perimeter, Process, Perimeter_len = grow_eden(Time)
-# Nearest_diag, tiles = neighbours_diag([0, 0, 0, 2], Eden)
-# increment_betti_2(Eden, (0, 0, 0, 2))
-draw_eden(Eden, Time, '')
-print('hi')
-
+Time = 500
+Eden, Perimeter, Process, Perimeter_len, Betti_2_vector_changes, Betti_2, Betti_2_total_vector, Barcode, Betti_1_total, \
+    Betti_1_total_vector, Created_Holes, Holes, Cubes_perimeter_edge = grow_eden(Time)
+# draw_barcode(Barcode, Time)
+draw_eden(Eden, Time)
 
 
 
