@@ -261,3 +261,32 @@ def euler_characteristic(k0, k1, k2):
 
 def return_betti_1(betti_2, euler_ch):
     return 1 + betti_2 - euler_ch
+
+
+def shift_for_edge_voids(third_direction):
+    directions = [0, 1, 2]
+    directions.remove(third_direction)
+    diff = np.array([[0, 1.], [1, 0], [0, -1], [-1, 0]]).astype(float)
+
+    cubes_plus = np.array([[0, 0, 0]] * 4).astype(float)
+    for i, n in enumerate(cubes_plus):
+        n[directions] = diff[i]
+        n[third_direction] = 0.5
+    cubes_minus = np.array([[0, 0, 0]] * 4).astype(float)
+    for i, n in enumerate(cubes_minus):
+        n[directions] = diff[i]
+        n[third_direction] = -0.5
+    return np.concatenate((cubes_plus, cubes_minus))
+
+
+def edge_voids(tile, shift_):
+    """returns 10 voids which share at least an edge with the tile"""
+    tile = np.array(tile).astype(float)
+    cubes = []
+    """first two cubes which share the tile"""
+    cubes[:1] = nearest_voids(tile)
+    """other 8 cubes which share the edge"""
+    shift = shift_[int(tile[3])]
+    cubes[2:10] = tile[:3] + shift
+    cubes = [tuple(x) for x in cubes]
+    return cubes
