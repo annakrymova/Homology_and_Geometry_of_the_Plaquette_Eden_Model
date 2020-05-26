@@ -71,7 +71,7 @@ def neighbours_diag(eden, tile_selected):
 
 def actualize_vef(vertices, edges, nearest_n, nearest_diag):
     """for Euler characteristics. function updates number of vertices and edges"""
-    # CHANGE! the function was wrong. it was calculating the number of vertices in the wrong way
+    # CHANGE! the function was wrong. it was calculating the number of vertices in a wrong way
     v = [1] * 4
     e = [1] * 4
     for i in range(4):
@@ -178,7 +178,6 @@ def increment_betti_1(eden, tile_selected, nearest_n, nearest_n_tiles, barcode, 
                     if finished[i] == 1 and merged[i] == 0:
                         total_holes = total_holes + 1
                         holes[total_holes] = bds[i].copy()
-
                         for x in bds[i]:
                             if x in eden:
                                 eden[x][2] = total_holes
@@ -265,3 +264,5 @@ def bars_from_tree(b, tag):
 
 def increment_betti_1_euler(vertices, edges, time):
     return 1 - vertices + edges - time - 1
+
+
