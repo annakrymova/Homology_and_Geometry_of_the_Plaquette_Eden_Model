@@ -26,12 +26,13 @@ def grow_eden(t):
     shift_edge_voids = [shift_for_edge_voids(0), shift_for_edge_voids(1), shift_for_edge_voids(2)]
 
     v = nearest_voids((0, 0, 0, 2))
-    voids = {v[0]: [0, [0, 0, 0, 0, 1, 0], 0], v[1]: [0, [0, 0, 0, 0, 0, 1], 0]}
-    """dictionary, its items are (x,y,z): [filled, [f0, f1, f2, f3, f4, f5], h]
-    where (x,y,z) is cube's center
+    voids = {v[0]: [0, [0, 0, 0, 0, 1, 0], 0, 0], v[1]: [0, [0, 0, 0, 0, 0, 1], 0, 0]}
+    """dictionary, its items are (x,y,z): [filled, [f0, f1, f2, f3, f4, f5], h, t]
+    where (x,y,z) is a cube's center
     filled = 1 if all cube's faces are in complex
     f0 = 1 if the face number 0 in in complex amd so on
-    h = 1 if the void is in a hole """
+    h = 0 if the void is not in a hole and h = num_hole of the void is in a hole
+    t is a time when the void was filled"""
 
     holes = {}  # dictionary containing all VOIDS that create holes
     total_holes = 0
@@ -60,8 +61,14 @@ def grow_eden(t):
         c = nearest_cubes(tile_selected)
         faces = update_void_dict(v, c, eden)
 
-        voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0]
-        voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0]
+        t0, t1 = 0, 0
+        if int(sum(faces[0]) / 6) == 1:
+            t0 = i
+        if int(sum(faces[1]) / 6) == 1:
+            t1 = i
+
+        voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0, t0]
+        voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0, t1]
 
         new_cubes = edge_voids(tile_selected, shift_edge_voids)
         for cube in new_cubes:
@@ -94,7 +101,7 @@ def grow_eden(t):
     perimeter_len = perimeter_len + [len(perimeter)]
 
     return eden, perimeter, process, perimeter_len, betti_2_vector_changes, betti_2_total, betti_2_total_vector, barcode,\
-           betti_1_total, betti_1_total_vector, created_holes, holes, cubes_perimeter_edge  # , tags, final_barcode
+           betti_1_total, betti_1_total_vector, created_holes, holes, cubes_perimeter_edge, voids  # , tags, final_barcode
 
 
 def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time, created_holes):  # , nearest_n, nearest_n_tiles):
@@ -181,7 +188,7 @@ def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
 
 Time = 500
 Eden, Perimeter, Process, Perimeter_len, Betti_2_vector_changes, Betti_2, Betti_2_total_vector, Barcode, Betti_1_total, \
-    Betti_1_total_vector, Created_Holes, Holes, Cubes_perimeter_edge = grow_eden(Time)
+    Betti_1_total_vector, Created_Holes, Holes, Cubes_perimeter_edge, Voids = grow_eden(Time)
 # draw_barcode(Barcode, Time)
 draw_eden(Eden, Time)
 
