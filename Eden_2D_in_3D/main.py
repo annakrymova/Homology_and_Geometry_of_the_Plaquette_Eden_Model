@@ -66,9 +66,16 @@ def grow_eden(t):
             t0 = i
         if int(sum(faces[1]) / 6) == 1:
             t1 = i
-
-        voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0, t0]
-        voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0, t1]
+        if v[0] not in voids:
+            voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0, t0]
+        else:
+            voids[v[0]][0:2] = [int(sum(faces[0]) / 6), faces[0]]
+            voids[v[0]][3] = t0
+        if v[1] not in voids:
+            voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0, t1]
+        else:
+            voids[v[1]][0:2] = [int(sum(faces[1]) / 6), faces[1]]
+            voids[v[1]][3] = t1
 
         new_cubes = edge_voids(tile_selected, shift_edge_voids)
         for cube in new_cubes:
@@ -107,19 +114,16 @@ def grow_eden(t):
 def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time, created_holes):  # , nearest_n, nearest_n_tiles):
     """betti_2 can increase only"""
     tile = np.array(tile_selected)
-
-    non_trivial_holes_0 = np.array([holes[x] for x in holes if len(holes[x]) > 1])
-    non_trivial_holes = []
-    for x in non_trivial_holes_0:
-        non_trivial_holes = non_trivial_holes + list(x)
-    non_trivial_holes = [tuple(x) for x in non_trivial_holes]
+    holes_voids = [v for v in voids if voids[v][2] != 0]
     v = nearest_voids(tile)
 
-    if v[0] in non_trivial_holes:  # if it's true then v[1] is in the same hole
+    if v[0] in holes_voids:
         per = 0
         num_hole = [x for x in holes if v[0] in holes[x]][0]
     else:
         per = 1
+    """per = 0 means we are inside the hole"""
+
     num_possible_components = 2
     bfs = nearest_voids(tile)
     bfs = [[bfs[0]], [bfs[1]]]
@@ -128,7 +132,7 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
     finished = [0] * num_possible_components
     merged = False
     while sum(finished) < num_possible_components - per and not merged:
-        for j in range(0, num_possible_components):
+        for j in range(num_possible_components):
             if finished[j] == 0:
                 bfs, merged, finished = add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids)
                 if (iterations + 1) == len(bfs[j]):  # the hole is filled
@@ -146,7 +150,10 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                     total_holes += 1
                     holes[total_holes] = bfs[i].copy()
                     for void in bfs[i]:
-                        voids[void][2] = total_holes
+                        if void in voids:
+                            voids[void][2] = total_holes
+                        else:
+                            voids[void] = [0, [0, 0, 0, 0, 0, 0], total_holes, 0]
                     barcode[total_holes] = [time + 1, 0]
                     created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i])]]
         else:
@@ -155,7 +162,10 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                     total_holes += 1
                     holes[total_holes] = bfs[i].copy()
                     for void in bfs[i]:
-                        voids[void][2] = total_holes
+                        if void in voids:
+                            voids[void][2] = total_holes
+                        else:
+                            voids[void] = [0, [0, 0, 0, 0, 0, 0], total_holes, 0]
                     barcode[total_holes] = [time + 1, 0]
                     created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i])]]
     return betti_2, total_holes, eden, holes, voids, barcode, created_holes
@@ -182,7 +192,9 @@ def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
             # update merge/finish
             if new_void in bfs[1 - j]:  # if j new_void in the second part of gas
                 merged = True
-                finished[1] = 1
+                finished[j] = 1
+        if merged:
+            break
     return bfs, merged, finished
 
 
