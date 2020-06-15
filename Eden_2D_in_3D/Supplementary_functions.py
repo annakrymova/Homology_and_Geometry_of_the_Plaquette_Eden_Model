@@ -290,3 +290,65 @@ def edge_voids(tile, shift_):
     cubes[2:10] = tile[:3] + shift
     cubes = [tuple(x) for x in cubes]
     return cubes
+
+
+def barcode_forest(barcode, tags):
+    bars_pure = []
+    bars_hole = []
+    for x in barcode:
+        if barcode[x][0] == 0:
+            bars_pure = bars_pure + [barcode[x][1]]
+
+    for x in tags:
+        b = {}
+        for elem in barcode:
+            if barcode[elem][2][0] == x:
+                b[tuple(barcode[elem][2])] = barcode[elem][1]
+        bars_hole = bars_hole + bars_from_tree(b, x)
+    return bars_pure + bars_hole
+
+
+def hamming2(s1, s2):
+    """Calculates the Hamming distance between two bit strings"""
+    assert len(s1) == len(s2)
+    return sum(c1 != c2 for c1, c2 in zip(s1, s2))
+
+
+def bars_from_tree(b, tag):
+    n = max(len(x) for x in b)
+    bars = []
+    while n > 0:
+        leaves_parent = [x for x in b if len(x) == n - 1]
+
+        # print(leaves_parent)
+        possible_leaves = [x for x in b if len(x) == n]
+        # print(possible_leaves)
+        for j in leaves_parent:
+            leaves = []
+            for x in possible_leaves:
+                # print(x)
+                root = list(x)
+                del root[-1]
+                root = tuple(root)
+                if hamming2(j, root) == 0:
+                    leaves = leaves + [x]
+            # diff(possible_leaves, leaves)
+            # print(leaves)
+            if len(leaves) > 0:
+                times = []
+                for x in leaves:
+                    times = times + [b[x][1]]
+                if 0 in times:
+                    ind = times.index(0)
+                    for i in range(0, len(leaves)):
+                        if i != ind:
+                            bars = bars + [b[leaves[i]]]
+                else:
+                    ind = times.index(max(times))
+                    for i in range(0, len(leaves)):
+                        if i != ind:
+                            bars = bars + [b[leaves[i]]]
+                    b[j][1] = max(times)
+        n = n - 1
+    bars = bars + [b[(tag,)]]
+    return bars

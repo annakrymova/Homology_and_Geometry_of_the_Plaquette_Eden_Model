@@ -4,7 +4,7 @@ import numpy as np
 from Supplementary_functions import start_eden_2d_in_3d, actualize_neighbors, neighbours_diag, actualize_vef, \
     nearest_cubes, nearest_voids, dimension, shift_for_neighbors, shift_for_neighbours_diag, \
     check_cube_in_eden, update_void_dict, shift_vertices, return_vertices, euler_characteristic, \
-    return_betti_1, edge_voids, shift_for_edge_voids
+    return_betti_1, edge_voids, shift_for_edge_voids, barcode_forest
 
 from Drawing import draw_eden, draw_complex, draw_square, draw_barcode
 import sys
@@ -106,6 +106,8 @@ def grow_eden(t):
         betti_1_total_vector += [betti_1_total]
 
     perimeter_len = perimeter_len + [len(perimeter)]
+    final_barcode = barcode_forest(barcode, tags)
+    final_barcode.sort()
 
     return eden, perimeter, process, perimeter_len, betti_2_vector_changes, betti_2_total, betti_2_total_vector, barcode,\
            betti_1_total, betti_1_total_vector, created_holes, holes, cubes_perimeter_edge, voids, tags, final_barcode
@@ -143,8 +145,14 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
     # if betti_2 == 0 literally nothing happens
     if betti_2 == 1:
         if per == 0:
+
+            if barcode[num_hole][0] == 0:
+                tags = tags + [num_hole]
+                barcode[num_hole][0] = 1
+
             holes.pop(num_hole)
-            barcode[num_hole][1] = time + 1
+            barcode[num_hole][1][1] = time + 1
+
             for i in range(num_possible_components):
                 if finished[i] == 1:
                     total_holes += 1
@@ -154,7 +162,7 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                             voids[void][2] = total_holes
                         else:
                             voids[void] = [0, [0, 0, 0, 0, 0, 0], total_holes, 0]
-                    barcode[total_holes] = [time + 1, 0]
+                    barcode[total_holes] = [1, [time + 1, 0], barcode[num_hole][2] + [total_holes]]
                     created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i])]]
         else:
             for i in range(num_possible_components):
@@ -166,9 +174,9 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                             voids[void][2] = total_holes
                         else:
                             voids[void] = [0, [0, 0, 0, 0, 0, 0], total_holes, 0]
-                    barcode[total_holes] = [time + 1, 0]
+                        barcode[total_holes] = [0, [time + 1, 0], [total_holes]]
                     created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i])]]
-    return betti_2, total_holes, eden, holes, voids, barcode, created_holes
+    return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags
 
 
 def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
@@ -200,8 +208,8 @@ def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
 
 Time = 500
 Eden, Perimeter, Process, Perimeter_len, Betti_2_vector_changes, Betti_2, Betti_2_total_vector, Barcode, Betti_1_total, \
-    Betti_1_total_vector, Created_Holes, Holes, Cubes_perimeter_edge, Voids = grow_eden(Time)
-# draw_barcode(Barcode, Time)
+    Betti_1_total_vector, Created_Holes, Holes, Cubes_perimeter_edge, Voids, Tags, Final_barcode = grow_eden(Time)
+draw_barcode(Final_barcode, Time)
 draw_eden(Eden, Time)
 
 
