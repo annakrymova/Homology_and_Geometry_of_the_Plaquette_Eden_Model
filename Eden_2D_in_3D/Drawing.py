@@ -8,7 +8,7 @@ def draw_square(x0, y0, z0, d, ax, alpha=0.5, col='gray', ls=0.45):
     """d = 1 if square is parallel to xOy, d = 2 if x0z, d = 3 if y0z"""
     """ls is a half of square side"""
     if d == 0:
-        col = 'blue'
+        # col = 'blue'
         y = np.linspace(y0-ls, y0+ls, num=2)
         z = y + z0 - y0
         y, z = np.meshgrid(y, z)
@@ -72,10 +72,10 @@ def draw_complex(eden, time, tile):
     add_box(eden, ax, 5)
 
     for x in eden:
-        if eden[x][0] == 1:
-            draw_square(x[0], x[1], x[2], x[3], ax=ax, col='gray')
-    draw_square(0, 0, 0, 2, ax=ax, col='green')
-    draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, alpha=1, col='orange')
+        # if eden[x][0] == 1:
+        draw_square(x[0], x[1], x[2], x[3], ax=ax, col='gray')
+    # draw_square(0, 0, 0, 2, ax=ax, col='green')
+    # draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, alpha=1, col='green')
     plt.savefig('pictures/eden_' + str(time) + '.svg', format='svg', dpi=1200)
     plt.show()
 

@@ -120,8 +120,8 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
     v = nearest_voids(tile)
 
     if v[0] in holes_voids:
-        per = 0
         num_hole = [x for x in holes if v[0] in holes[x]][0]
+        per = 0
     else:
         per = 1
     """per = 0 means we are inside the hole"""
@@ -141,7 +141,7 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                     finished[j] = 1
         iterations += 1
     betti_2 = 1 - int(merged)
-    
+
     # if betti_2 == 0 literally nothing happens
     if betti_2 == 1:
         if per == 0:
