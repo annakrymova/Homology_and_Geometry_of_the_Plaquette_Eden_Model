@@ -40,7 +40,7 @@ def grow_eden(t):
     """dictionary, num_hole: [start_time, end_time]"""
     created_holes = []
     cubes_perimeter_edge = edge_voids((0, 0, 0, 2), shift_edge_voids)
-    # tags = []
+    tags = []
 
     betti_2_total = 0
     betti_2_vector_changes = [0]
@@ -94,9 +94,9 @@ def grow_eden(t):
         nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
         vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
 
-        betti_2, total_holes, eden, holes, voids, barcode, created_holes = increment_betti_2(eden, tile_selected, voids,
-                                                                                             total_holes, holes, barcode, i, created_holes)
-        
+        betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags = increment_betti_2(eden, tile_selected, voids,
+                                                                                                   total_holes, holes, barcode,
+                                                                                                   i, created_holes, tags)
         betti_2_vector_changes += [betti_2]
         betti_2_total += + betti_2
         betti_2_total_vector += [betti_2_total]
@@ -108,10 +108,10 @@ def grow_eden(t):
     perimeter_len = perimeter_len + [len(perimeter)]
 
     return eden, perimeter, process, perimeter_len, betti_2_vector_changes, betti_2_total, betti_2_total_vector, barcode,\
-           betti_1_total, betti_1_total_vector, created_holes, holes, cubes_perimeter_edge, voids  # , tags, final_barcode
+           betti_1_total, betti_1_total_vector, created_holes, holes, cubes_perimeter_edge, voids, tags, final_barcode
 
 
-def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time, created_holes):  # , nearest_n, nearest_n_tiles):
+def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time, created_holes, tags):  # , nearest_n, nearest_n_tiles):
     """betti_2 can increase only"""
     tile = np.array(tile_selected)
     holes_voids = [v for v in voids if voids[v][2] != 0]
