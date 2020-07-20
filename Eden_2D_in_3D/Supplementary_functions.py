@@ -421,7 +421,23 @@ def distances(hole):
     return dist[3:]
 
 
-
+def tiles_from_voids(voids):
+    tiles = set()
+    for x in voids:
+        x = np.array(x)
+        x = np.concatenate((x, [0]))
+        shift = [[0.5, 0, 0, 0],
+                 [-0.5, 0, 0, 0],
+                 [0, 0.5, 0, 0],
+                 [0, -0.5, 0, 0],
+                 [0, 0, -0.5, 0],
+                 [0, 0, -0.5, 0]]
+        shell = x + shift
+        for n in shell:
+            n[3] = dimension(n[:3])
+        shell = set([tuple(x) for x in shell])
+        tiles = tiles.union(shell)
+    return list(tiles)
 
 
 
