@@ -15,25 +15,26 @@ def dimension(coordinates):
 
 
 def start_eden_2d_in_3d():
-    """eden is a dictionary consisted of such items: (x, y, z, d): [a, b]
+    """eden is a dictionary consisted of such items: (x, y, z, d): [a, b, c]
     where (x, y, z) are the coordinates of the square center
     d is indicator which plane the square is parallel to
     a = 1 if the square is already in the complex (0 if only in the perimeter)
-    b = number of neighbours already in the complex (from 0 to 12)"""
+    b = number of neighbours already in the complex (from 0 to 12)
+    c = 1 if tile is in inner perimeter """
     """perimeter is a layer of the squares lying on the perimeter (but not yet it the complex)"""
-    eden = {(0, 0, 0, 2): [1, 0],
-            (1, 0, 0, 2): [0, 1],
-            (-1, 0, 0, 2): [0, 1],
-            (0, 1, 0, 2): [0, 1],
-            (0, -1, 0, 2): [0, 1],
-            (0.5, 0, 0.5, 0): [0, 1],
-            (0, 0.5, 0.5, 1): [0, 1],
-            (-0.5, 0, 0.5, 0): [0, 1],
-            (0, -0.5, 0.5, 1): [0, 1],
-            (0.5, 0, -0.5, 0): [0, 1],
-            (0, 0.5, -0.5, 1): [0, 1],
-            (-0.5, 0, -0.5, 0): [0, 1],
-            (0, -0.5, -0.5, 1): [0, 1]}
+    eden = {(0, 0, 0, 2): [1, 0, 0],
+            (1, 0, 0, 2): [0, 1, 0],
+            (-1, 0, 0, 2): [0, 1, 0],
+            (0, 1, 0, 2): [0, 1, 0],
+            (0, -1, 0, 2): [0, 1, 0],
+            (0.5, 0, 0.5, 0): [0, 1, 0],
+            (0, 0.5, 0.5, 1): [0, 1, 0],
+            (-0.5, 0, 0.5, 0): [0, 1, 0],
+            (0, -0.5, 0.5, 1): [0, 1, 0],
+            (0.5, 0, -0.5, 0): [0, 1, 0],
+            (0, 0.5, -0.5, 1): [0, 1, 0],
+            (-0.5, 0, -0.5, 0): [0, 1, 0],
+            (0, -0.5, -0.5, 1): [0, 1, 0]}
     perimeter = list(eden.keys())
     perimeter.remove((0, 0, 0, 2))
     return eden, perimeter
@@ -58,8 +59,9 @@ def shift_for_neighbors(third_direction):
     return diff_nearest_tiles
 
 
-def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors):
+def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors, voids):
     tile = list(tile_selected)
+    eden[tile_selected][2] = 0
     directions = [0, 1, 2]
     directions.remove(tile[3])
 
@@ -82,7 +84,7 @@ def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors):
                 if diff_nearest_tiles[i][directions[0]] < 0:
                     nearest_n[3] = 1
         else:
-            eden[n] = [0, 1]
+            eden[n] = [0, 1, 0]
             perimeter = perimeter + [n]
     return eden, perimeter, nearest_n, nearest_tiles
 
