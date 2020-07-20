@@ -1,6 +1,7 @@
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import numpy as np
+import collections
 
 
 def draw_square(x0, y0, z0, d, ax, alpha=0.5, col='gray', ls=0.45):
@@ -97,4 +98,104 @@ def draw_barcode(barcode, time):
         i = i + 40
     fig.savefig('pictures/barcode_'+str(time)+'.svg', format='svg', dpi=1200)
     plt.show()
+
+
+def draw_frequencies_1(dict):
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    l = len(dict[0])
+    shift = 300
+    ax.plot(range(shift, l), dict[-1][shift:], color='tab:red', label='-1')
+    ax.plot(range(shift, l), dict[0][shift:], color='tab:orange', label='0')
+    ax.plot(range(shift, l), dict[1][shift:], color='tab:green', label='1')
+    ax.plot(range(shift, l), dict[2][shift:], color='tab:blue', label='2')
+
+    plt.yscale('log')
+    ax.set_title('betti_1 frequencies')
+    ax.set_ylabel('frequency of change in betti_1')
+    ax.set_xlabel('time')
+    ax.legend()
+    plt.show()
+    fig.savefig('pictures/fr_b_1.png', format='png', dpi=1200)
+
+
+def draw_frequencies_2(dict):
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    l = len(dict[0])
+    shift = 300
+    ax.plot(range(shift, l), dict[0][shift:], color='tab:orange', label='0')
+    ax.plot(range(shift, l), dict[1][shift:], color='tab:green', label='1')
+
+    plt.yscale('log')
+    ax.set_title('betti_2 frequencies')
+    ax.set_ylabel('frequency of change in betti_2')
+    ax.set_xlabel('time')
+    ax.legend()
+    plt.show()
+    fig.savefig('pictures/fr_b_2.png', format='png', dpi=1200)
+
+
+def draw_diagram_holes(created_holes, holes):
+    fr_cr = [created_holes[i][-2] for i in range(len(created_holes))]
+    fr_cr.sort()
+    fr_final = [len(holes[i]) for i in holes]
+    fr_final.sort()
+    counter_cr = collections.Counter(fr_cr)
+    counter_final = collections.Counter(fr_final)
+    labels = []
+    a = np.arange(1, len(counter_cr) + 1)
+    for i in a:
+        labels.append(str(i))
+
+    for i in counter_cr.keys():
+        if i not in counter_final.keys():
+            counter_final[i] = 0
+
+    x = np.arange(len(labels))
+    width = 0.35
+
+    fig, ax = plt.subplots()
+    plt.yscale('log')
+    ax.bar(x - width/2, counter_cr.values(), width, label='Total')
+    ax.bar(x + width/2, counter_final.values(), width, label='Final')
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel('Frequency of Number of Holes')
+    ax.set_xlabel('Volume')
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.legend()
+
+    fig.tight_layout()
+
+    plt.show()
+    fig.savefig('pictures/holes.png', format='png', dpi=1200)
+
+
+def draw_tri_tetra(tri, tri_f, tetra, tetra_f):
+    width = 0.6
+    labels = list(tri)+list(tetra)
+    x = np.arange(len(labels))
+    fig, ax = plt.subplots()
+    plt.yscale('log')
+
+    ax.bar(x[:2], tri.values(), width, label='Tricubes Total', color='navy')
+    ax.bar(x[:2], tri_f.values(), width, label='Tricubes Final', color='royalblue')
+    ax.bar(x[2:], tetra.values(), width, label='Tetracubes Total', color='chocolate')
+    ax.bar(x[2:], tetra_f.values(), width, label='Tetracubes Final', color='orange')
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel('Frequency of Number of Holes')
+    ax.set_xlabel('Volume')
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.legend()
+    fig.tight_layout()
+
+    plt.show()
+    fig.savefig('pictures/tri-tetra-cubes.png', format='png', dpi=1200)
+
+
+
 
