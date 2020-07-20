@@ -4,10 +4,16 @@ import numpy as np
 from Supplementary_functions import start_eden_2d_in_3d, actualize_neighbors, neighbours_diag, actualize_vef, \
     nearest_cubes, nearest_voids, dimension, shift_for_neighbors, shift_for_neighbours_diag, \
     check_cube_in_eden, update_void_dict, shift_vertices, return_vertices, euler_characteristic, \
-    return_betti_1, edge_voids, shift_for_edge_voids, barcode_forest
+    return_betti_1, edge_voids, shift_for_edge_voids, barcode_forest, num_holes, tiles_from_voids
 
-from Drawing import draw_eden, draw_complex, draw_square, draw_barcode
+from Drawing import draw_eden, draw_complex, draw_square, draw_barcode, draw_frequencies_1, draw_frequencies_2, \
+    draw_diagram_holes, draw_tri_tetra
 import sys
+from itertools import groupby
+import collections
+
+import matplotlib.pyplot as plt
+from matplotlib.collections import EventCollection
 
 
 def grow_eden(t):
@@ -85,12 +91,8 @@ def grow_eden(t):
                 if voids[cube][0] == 1.:
                     cubes_perimeter_edge.remove(cube)
 
-        # check that voids dictionary corresponds to real complex
-        total_faces = sum(np.array(list(voids.values()))[:, 1].sum())
-        # if total_faces != 2 * len(process):
-        #     sys.exit('Something wrong with void function')
         eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter,
-                                                                                  shift_neighbours)
+                                                                                  shift_neighbours, voids)
         nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
         vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
 
@@ -163,7 +165,7 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                         else:
                             voids[void] = [0, [0, 0, 0, 0, 0, 0], total_holes, 0]
                     barcode[total_holes] = [1, [time + 1, 0], barcode[num_hole][2] + [total_holes]]
-                    created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i])]]
+                    created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i]), total_holes]]
         else:
             for i in range(num_possible_components):
                 if finished[i] == 1:
