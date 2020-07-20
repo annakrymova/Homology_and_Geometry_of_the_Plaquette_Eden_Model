@@ -354,3 +354,75 @@ def bars_from_tree(b, tag):
         n = n - 1
     bars = bars + [b[(tag,)]]
     return bars
+
+
+def num_holes(created_holes, holes):
+    tricube = dict.fromkeys(['l','i'], 0)
+    tricube_f = dict.fromkeys(['l','i'], 0)
+    tetracube = dict.fromkeys(['I', 'L', 'T', 'O', 'Z', 'A1', 'A2'], 0)
+    tetracube_f = dict.fromkeys(['I', 'L', 'T', 'O', 'Z', 'A1', 'A2'], 0)
+
+    total_3 = [i for i in created_holes if i[-2] == 3]
+    final_3 = [holes[i] for i in holes if len(holes[i]) == 3]
+    total_4 = [i for i in created_holes if i[-2] == 4]
+    final_4 = [holes[i] for i in holes if len(holes[i]) == 4]
+
+    # tricube case
+    for x in total_3:
+        j = 0
+        for i in range(3):
+            if x[-3][0][i] == x[-3][1][i] == x[-3][2][i]:
+                j += 1
+                dim = i
+        long = j == 2
+        tricube['i'] += long
+        tricube['l'] += (1 - long)
+        if x[-3] in final_3:
+            tricube_f['i'] += long
+            tricube_f['l'] += (1 - long)
+    # tetracube case
+    for x in total_4:
+        # check that x is plane
+        j = 0
+        for i in range(3):
+            if x[-3][0][i] == x[-3][1][i] == x[-3][2][i] == x[-3][3][i]:
+                j += 1
+        if j > -1: # so, the tetracube is plane
+            dist = distances(x[-3])
+            if dist == [2,2,3]:
+                typ = 'I'
+            elif dist == [1.4, 2, 2.2]:
+                typ = 'L'
+            elif dist == [1.4, 1.4, 2]:
+                typ = 'T'
+            elif dist == [1, 1.4, 1.4]:
+                typ = 'O'
+            elif dist == [1.4, 1.4, 2.2]:
+                typ = 'Z'
+            elif dist == [1.4, 1.4, 1.4]:
+                typ = 'A2'
+            else:
+                typ = 'A1'
+            tetracube[typ] += 1
+            if x[-3] in final_4:
+                tetracube_f[typ] += 1
+    return tricube, tricube_f, tetracube, tetracube_f
+
+
+def distances(hole):
+    hole = [np.array(k) for k in hole]
+    dist = []
+    for i in range(4):
+        for j in range(4):
+            if i < j:
+                dist.append(np.linalg.norm(hole[i]-hole[j]))
+    dist.sort()
+    dist = [round(i, 1) for i in dist]
+    return dist[3:]
+
+
+
+
+
+
+
