@@ -107,14 +107,18 @@ def grow_eden(t):
                               created_holes, tags, inner_perimeter, perimeter)
 
         # update 3d perimeter
-        if len(created_holes) > 10 or i > 4000:
-            a = 10
         total = len(voids)
         inner = len([x for x in voids if voids[x][2] != 0])
         outer = len([x for x in voids if voids[x][2] == 0])
         perim_3d = np.array([[total], [inner], [outer]])
-
         per_3d = np.c_[per_3d, perim_3d]
+
+        # update 2d perimeter
+        total = len(perimeter)
+        inner = len(inner_perimeter)
+        outer = total - inner
+        perim_2d = np.array([[total], [inner], [outer]])
+        per_2d = np.c_[per_2d, perim_2d]
 
         betti_2_vector_changes += [betti_2]
         betti_2_total += + betti_2
@@ -205,8 +209,36 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                         else:
                             voids[void] = [0, [0, 0, 0, 0, 0, 0], total_holes, 0]
                         barcode[total_holes] = [0, [time + 1, 0], [total_holes]]
-                    created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i])]]
-    return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags
+                    created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i]), total_holes]]
+
+    # change 2d inner perimeter
+    if per == 0:  # we are inside a hole:
+        inner_perimeter.remove(tile_selected)
+        eden[tile_selected][2] = 0
+        tile = list(tile_selected)
+        if betti_2 == 0:
+            hole = holes[num_hole]
+            tiles = tiles_from_voids(hole)
+            nearest_tiles = shift_for_neighbors(int(tile[3])) + (tile[:3] + [0])
+            for n in nearest_tiles:
+                n[3] = dimension(n[:3])
+            nearest_tiles = [tuple(n) for n in nearest_tiles]
+            for x in nearest_tiles:
+                if x in perimeter and x in tiles and x not in inner_perimeter:
+                    inner_perimeter.append(x)
+                    eden[x][2] = 1
+                    print('AAAAAAA')
+    else:
+        if betti_2 == 1:
+            hole = holes[total_holes]
+            if len(hole) > 1:
+                tiles = tiles_from_voids(hole)
+                for x in tiles:
+                    if x in perimeter:
+                        inner_perimeter.append(x)
+                        eden[x][2] = 1
+
+    return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter
 
 
 def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
