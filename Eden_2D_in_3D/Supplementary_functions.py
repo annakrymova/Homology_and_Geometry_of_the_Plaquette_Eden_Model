@@ -1,16 +1,11 @@
 import numpy as np
 import sys
-from Drawing import draw_eden
 
 
 def dimension(coordinates):
-    if coordinates[2] % 1 == 0:
-        d = 2
-    else:
-        if coordinates[0] % 1 != 0:
-            d = 0
-        if coordinates[1] % 1 != 0:
-            d = 1
+    for i in range(3):
+        if coordinates[i] % 1 == 0.5:
+            d = i
     return d
 
 
@@ -22,21 +17,21 @@ def start_eden_2d_in_3d():
     b = number of neighbours already in the complex (from 0 to 12)
     c = 1 if tile is in inner perimeter """
     """perimeter is a layer of the squares lying on the perimeter (but not yet it the complex)"""
-    eden = {(0, 0, 0, 2): [1, 0, 0],
-            (1, 0, 0, 2): [0, 1, 0],
-            (-1, 0, 0, 2): [0, 1, 0],
-            (0, 1, 0, 2): [0, 1, 0],
-            (0, -1, 0, 2): [0, 1, 0],
-            (0.5, 0, 0.5, 0): [0, 1, 0],
-            (0, 0.5, 0.5, 1): [0, 1, 0],
-            (-0.5, 0, 0.5, 0): [0, 1, 0],
-            (0, -0.5, 0.5, 1): [0, 1, 0],
-            (0.5, 0, -0.5, 0): [0, 1, 0],
-            (0, 0.5, -0.5, 1): [0, 1, 0],
-            (-0.5, 0, -0.5, 0): [0, 1, 0],
-            (0, -0.5, -0.5, 1): [0, 1, 0]}
+    eden = {(0, 0, 0.5, 2): [1, 0, 0],
+            (1, 0, 0.5, 2): [0, 1, 0],
+            (-1, 0, 0.5, 2): [0, 1, 0],
+            (0, 1, 0.5, 2): [0, 1, 0],
+            (0, -1, 0.5, 2): [0, 1, 0],
+            (0.5, 0, 1, 0): [0, 1, 0],
+            (0, 0.5, 1, 1): [0, 1, 0],
+            (-0.5, 0, 1, 0): [0, 1, 0],
+            (0, -0.5, 1, 1): [0, 1, 0],
+            (0.5, 0, 0, 0): [0, 1, 0],
+            (0, 0.5, 0, 1): [0, 1, 0],
+            (-0.5, 0, 0, 0): [0, 1, 0],
+            (0, -0.5, 0, 1): [0, 1, 0]}
     perimeter = list(eden.keys())
-    perimeter.remove((0, 0, 0, 2))
+    perimeter.remove((0, 0, 0.5, 2))
     return eden, perimeter
 
 

@@ -58,7 +58,7 @@ def draw_eden(eden, time):
     for x in eden:
         if eden[x][0] == 1:
             draw_square(x[0], x[1], x[2], x[3], ax=ax, col='gray')
-    draw_square(0, 0, 0, 2, ax=ax, col='green')
+    draw_square(0, 0, 0.5, 2, ax=ax, col='green')
     plt.savefig('pictures/eden_' + str(time) + '.svg', format='svg', dpi=1200)
     plt.show()
 
