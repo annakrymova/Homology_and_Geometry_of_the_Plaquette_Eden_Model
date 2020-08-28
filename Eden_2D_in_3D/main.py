@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 
 
-def grow_eden(t):
+def grow_eden(t, model):
     vertices = 4
     edges = 4
 
@@ -59,6 +59,7 @@ def grow_eden(t):
 
     betti_1_frequencies = {-1: [], 0: [], 1: [], 2: []}
     betti_2_frequencies = {0: [], 1: []}
+    skipped = 0
 
     for i in tqdm(range(1, t)):
         perimeter_len = perimeter_len + [len(perimeter)]
@@ -89,6 +90,38 @@ def grow_eden(t):
             voids[v[1]][0:2] = [int(sum(faces[1]) / 6), faces[1]]
             voids[v[1]][3] = t1
 
+        betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter = \
+            increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, i,
+                              created_holes, tags, inner_perimeter, perimeter, model)
+        if model == 'no_betti_2':
+            if betti_2 == 1:
+                skipped += 1
+                perimeter_len.pop()
+                perimeter += [tile_selected]
+                eden[tile_selected][0] = 0
+
+                v = nearest_voids(tile_selected)
+                c = nearest_cubes(tile_selected)
+                faces = update_void_dict(v, c, eden)
+
+                t0, t1 = 0, 0
+                if int(sum(faces[0]) / 6) == 1:
+                    t0 = i
+                if int(sum(faces[1]) / 6) == 1:
+                    t1 = i
+                if v[0] not in voids:
+                    voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0, t0]
+                else:
+                    voids[v[0]][0:2] = [int(sum(faces[0]) / 6), faces[0]]
+                    voids[v[0]][3] = t0
+                if v[1] not in voids:
+                    voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0, t1]
+                else:
+                    voids[v[1]][0:2] = [int(sum(faces[1]) / 6), faces[1]]
+                    voids[v[1]][3] = t1
+
+                continue
+
         new_cubes = edge_voids(tile_selected, shift_edge_voids)
         for cube in new_cubes:
             if cube not in cubes_perimeter_edge:
@@ -102,9 +135,7 @@ def grow_eden(t):
         nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
         vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
 
-        betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter = \
-            increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, i,
-                              created_holes, tags, inner_perimeter, perimeter)
+
 
         # update 3d perimeter
         total = len(voids)
@@ -121,7 +152,7 @@ def grow_eden(t):
         per_2d = np.c_[per_2d, perim_2d]
 
         betti_2_vector_changes += [betti_2]
-        betti_2_total += + betti_2
+        betti_2_total += betti_2
         betti_2_total_vector += [betti_2_total]
 
         euler_character = euler_characteristic(vertices, edges, i + 1)
@@ -129,7 +160,7 @@ def grow_eden(t):
         betti_1_total_vector += [betti_1_total]
 
         # update betti_1 fr
-        betti_1_vector_changes = [betti_1_total_vector[j+1] - betti_1_total_vector[j] for j in range(i-1)]
+        betti_1_vector_changes = [betti_1_total_vector[j+1] - betti_1_total_vector[j] for j in range(i-skipped-1)]
         counter = collections.Counter(betti_1_vector_changes)
         a = [-1, 0, 1, 2]
         for k in a:
@@ -147,7 +178,7 @@ def grow_eden(t):
 
 
 def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time, created_holes, tags,
-                      inner_perimeter, perimeter):  # , nearest_n, nearest_n_tiles):
+                      inner_perimeter, perimeter, model):  # , nearest_n, nearest_n_tiles):
     """betti_2 can increase only"""
     tile = np.array(tile_selected)
     holes_voids = [v for v in voids if voids[v][2] != 0]
@@ -175,6 +206,10 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                     finished[j] = 1
         iterations += 1
     betti_2 = 1 - int(merged)
+
+    if model == 'no_betti_2':
+        if betti_2 == 1:
+            return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter
 
     # if betti_2 == 0 literally nothing happens
     if betti_2 == 1:
@@ -227,7 +262,6 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                 if x in perimeter and x in tiles and x not in inner_perimeter:
                     inner_perimeter.append(x)
                     eden[x][2] = 1
-                    print('AAAAAAA')
     else:
         if betti_2 == 1:
             hole = holes[total_holes]
