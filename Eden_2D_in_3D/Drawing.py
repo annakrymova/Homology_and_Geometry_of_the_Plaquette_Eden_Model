@@ -2,6 +2,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import numpy as np
 import collections
+import pandas as pd
 
 
 def draw_square(x0, y0, z0, d, ax, alpha=0.5, col='gray', ls=0.45):
@@ -48,19 +49,26 @@ def add_box(eden, ax, max_range=5):
 
 
 def draw_eden(eden, time):
+    # ax.grid(True)
     plt.style.use('ggplot')
     fig = plt.figure()
-    ax = fig.gca(projection='3d')
+    ax = plt.axes(projection='3d')
     ax.axis('off')
-    # ax.grid(True)
+    fig.set_facecolor('w')
+    ax.set_facecolor('w')
+    ax.grid(False)
+    ax.w_xaxis.pane.fill = False
+    ax.w_yaxis.pane.fill = False
+    ax.w_zaxis.pane.fill = False
+    add_box(eden, ax)
     add_box(eden, ax)
 
     for x in eden:
         if eden[x][0] == 1:
-            draw_square(x[0], x[1], x[2], x[3], ax=ax, col='gray')
-    draw_square(0, 0, 0.5, 2, ax=ax, col='green')
-    plt.savefig('pictures/eden_' + str(time) + '.svg', format='svg', dpi=1200)
-    plt.show()
+            draw_square(x[0], x[1], x[2], x[3], ax=ax, col='tab:blue')
+    # draw_square(0, 0, 0.5, 2, ax=ax, col='green')
+    plt.savefig('pictures/eden/eden_' + str(time) + '.png', format='png', dpi=1200)
+    # plt.show()
 
 
 def draw_complex(eden, time, tile):
@@ -73,11 +81,13 @@ def draw_complex(eden, time, tile):
     add_box(eden, ax, 5)
 
     for x in eden:
-        # if eden[x][0] == 1:
-        draw_square(x[0], x[1], x[2], x[3], ax=ax, col='gray')
-    # draw_square(0, 0, 0, 2, ax=ax, col='green')
-    # draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, alpha=1, col='green')
-    plt.savefig('pictures/eden_' + str(time) + '.svg', format='svg', dpi=1200)
+        if eden[x][0] == 1 and x != tile:
+            draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.5, col='dimgray')
+        # if eden[x][0] == 0:
+        #     draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.3, col='lightgrey')
+    draw_square(0, 0, 0.5, 2, ax=ax, col='green')
+    draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, col='orange')
+    plt.savefig('pictures/eden_' + str(time) + '.png', format='png', dpi=1200)
     plt.show()
 
 
@@ -197,5 +207,71 @@ def draw_tri_tetra(tri, tri_f, tetra, tetra_f):
     fig.savefig('pictures/tri-tetra-cubes.png', format='png', dpi=1200)
 
 
+def draw_square_0(x, y, col='gray', alpha=1, ls=0.35):
+    """With center at x, y draw a square of area 1"""
+    """it's area is actually 4ls^2, isn't it?"""
+    """ls is a half of square side"""
+    # plt.grid(True)
+    plt.fill([x - ls, x + ls, x + ls, x - ls], [y - ls, y - ls, y + ls, y + ls], alpha=alpha, color=col)
 
 
+# def draw_polyomino(eden, time):
+#     """This function draws a square for each (x, y) if the respective IO entry is 1 and does nothing if it is 0"""
+#     """As I got entries of eden are (x, y): [a, b, c] and if a == 1 than we draw the square with the center (x, y)
+#     b probably corresponds to the number how many times we could've add this square to the eden"""
+#     plt.style.use('ggplot')
+#     plt.axis('off')
+#     plt.rc('grid', linestyle="-", color='black')
+#     plt.grid(True)
+#     # plt.rc('grid', linestyle="-", color='black')  # why do we need this line twice? and does it change anything?
+#     plt.gca().set_aspect('equal', adjustable='box')
+#
+#     for x in eden:
+#         if eden[x][0] == 1:
+#             draw_square_0(x[0], x[1], 1., 'dimgray')
+#         if eden[x][0] == 0:
+#             draw_square_0(x[0], x[1], 0.3, 'gray', )
+#     # draw_square_0(0, 0, 'green')
+#     plt.savefig('pictures/eden_' + str(time) + '.png', format='png', dpi=1200)
+#     plt.show()
+#
+#
+# eden = {(0, 0): [1], (0, 1): [0], (0, -1): [0], (1, 0): [0], (-1, 0): [0]}
+# draw_polyomino(eden, 0)
+# eden = {(0, 0): [1], (0, 1): [0], (0, -1): [0], (1, 0): [1], (-1, 0): [0], (1, 1): [0], (1, -1): [0], (2, 0): [0]}
+# draw_polyomino(eden, 1)
+# eden = {(0, 0): [1], (0, 1): [1], (0, -1): [0], (1, 0): [1], (-1, 0): [0], (1, 1): [0], (1, -1): [0], (2, 0): [0], (0, 2):[0], (-1, 1):[0]}
+# draw_polyomino(eden, 2)
+#
+# a = 10
+
+# x1, y1 = [-1, 0], [0, 0]
+# plt.axis('off')
+# plt.plot(x1, y1, linewidth=6)
+# plt.savefig('pictures/line', format='png', dpi=1200)
+# plt.show()
+
+# plt.plot([0], [0], marker='o', markersize=5)
+# plt.axis('off')
+# plt.savefig('pictures/point', format='png', dpi=1200)
+# plt.show()
+
+# plt.axis('off')
+# plt.gca().set_aspect('equal', adjustable='box')
+# [x, y] = [0, 0]
+# ls = 0.45
+# alpha = 1
+# plt.fill([x - ls, x + ls, x + ls, x - ls], [y - ls, y - ls, y + ls, y + ls], alpha=alpha)
+# plt.savefig('pictures/square', format='png', dpi=1200)
+# plt.show()
+
+#
+# Eden = {(0, 0, 0.5, 2): [1],
+#             (0, 0, -0.5, 2): [1],
+#             (-0.5, 0, 0, 0): [1],
+#             (0.5, 0, 0, 0): [1],
+#             (0, 0.5, 0, 1): [1],
+#             (0, -0.5, 0, 1): [1]}
+#
+# draw_eden(Eden, 0)
+# plt.show()

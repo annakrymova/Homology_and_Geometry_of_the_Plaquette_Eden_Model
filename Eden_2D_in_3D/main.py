@@ -60,6 +60,7 @@ def grow_eden(t, model):
     betti_1_frequencies = {-1: [], 0: [], 1: [], 2: []}
     betti_2_frequencies = {0: [], 1: []}
     skipped = 0
+    euler_char_prev = 1
 
     for i in tqdm(range(1, t)):
         perimeter_len = perimeter_len + [len(perimeter)]
@@ -90,37 +91,50 @@ def grow_eden(t, model):
             voids[v[1]][0:2] = [int(sum(faces[1]) / 6), faces[1]]
             voids[v[1]][3] = t1
 
-        betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter = \
-            increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, i,
-                              created_holes, tags, inner_perimeter, perimeter, model)
-        if model == 'no_betti_2':
-            if betti_2 == 1:
-                skipped += 1
-                perimeter_len.pop()
-                perimeter += [tile_selected]
-                eden[tile_selected][0] = 0
+        eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter,
+                                                                                  shift_neighbours)
+        nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
+        vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
 
-                v = nearest_voids(tile_selected)
-                c = nearest_cubes(tile_selected)
-                faces = update_void_dict(v, c, eden)
+        euler_character = euler_characteristic(vertices, edges, i - skipped + 1)
 
-                t0, t1 = 0, 0
-                if int(sum(faces[0]) / 6) == 1:
-                    t0 = i
-                if int(sum(faces[1]) / 6) == 1:
-                    t1 = i
-                if v[0] not in voids:
-                    voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0, t0]
-                else:
-                    voids[v[0]][0:2] = [int(sum(faces[0]) / 6), faces[0]]
-                    voids[v[0]][3] = t0
-                if v[1] not in voids:
-                    voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0, t1]
-                else:
-                    voids[v[1]][0:2] = [int(sum(faces[1]) / 6), faces[1]]
-                    voids[v[1]][3] = t1
+        if (model == 'no_betti_2_new' and euler_character <= euler_char_prev) or (model != 'no_betti_2_new'):
+            betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter = \
+                increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, i,
+                                  created_holes, tags, inner_perimeter, perimeter, model)
 
-                continue
+        if (euler_character > euler_char_prev and model == 'no_betti_2_new') or (betti_2 == 1 and model == 'no_betti_2'):
+            skipped += 1
+            perimeter_len.pop()
+            perimeter += [tile_selected]
+            eden[tile_selected][0] = 0
+
+            v = nearest_voids(tile_selected)
+            c = nearest_cubes(tile_selected)
+            faces = update_void_dict(v, c, eden)
+
+            t0, t1 = 0, 0
+            if int(sum(faces[0]) / 6) == 1:
+                t0 = i
+            if int(sum(faces[1]) / 6) == 1:
+                t1 = i
+            if v[0] not in voids:
+                voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0, t0]
+            else:
+                voids[v[0]][0:2] = [int(sum(faces[0]) / 6), faces[0]]
+                voids[v[0]][3] = t0
+            if v[1] not in voids:
+                voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0, t1]
+            else:
+                voids[v[1]][0:2] = [int(sum(faces[1]) / 6), faces[1]]
+                voids[v[1]][3] = t1
+            continue
+
+        euler_char_prev = euler_character
+
+        # update betti_1
+        betti_1_total = return_betti_1(betti_2_total, euler_character)
+        betti_1_total_vector += [betti_1_total]
 
         new_cubes = edge_voids(tile_selected, shift_edge_voids)
         for cube in new_cubes:
@@ -129,13 +143,6 @@ def grow_eden(t, model):
             if cube in voids:
                 if voids[cube][0] == 1.:
                     cubes_perimeter_edge.remove(cube)
-
-        eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter,
-                                                                                  shift_neighbours, voids)
-        nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
-        vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
-
-
 
         # update 3d perimeter
         total = len(voids)
@@ -155,12 +162,8 @@ def grow_eden(t, model):
         betti_2_total += betti_2
         betti_2_total_vector += [betti_2_total]
 
-        euler_character = euler_characteristic(vertices, edges, i + 1)
-        betti_1_total = return_betti_1(betti_2_total, euler_character)
-        betti_1_total_vector += [betti_1_total]
-
         # update betti_1 fr
-        betti_1_vector_changes = [betti_1_total_vector[j+1] - betti_1_total_vector[j] for j in range(i-skipped-1)]
+        betti_1_vector_changes = [betti_1_total_vector[j+1] - betti_1_total_vector[j] for j in range(i - skipped - 2*length - 1)]
         counter = collections.Counter(betti_1_vector_changes)
         a = [-1, 0, 1, 2]
         for k in a:

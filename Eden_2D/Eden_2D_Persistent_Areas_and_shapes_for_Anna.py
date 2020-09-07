@@ -73,13 +73,13 @@ def grow_eden(t):
         betti_1_total += betti_1
         betti_1_total_vector = betti_1_total_vector + [betti_1_total]
 
-        # final_barcode = barcode_forest(barcode, tags)
+        final_barcode = barcode_forest(barcode, tags)
 
     l = len(perimeter)
     perimeter_len = perimeter_len + [l]
 
     return eden, perimeter, betti_1_total_vector, betti_1_vector_changes, barcode, holes, betti_1_total, \
-           created_holes, process, perimeter_len  # , tags, final_barcode
+           created_holes, process, perimeter_len, tags, final_barcode
 
 
 def grow_eden_debugging(t, ordered_tiles):
@@ -129,8 +129,9 @@ def grow_eden_debugging(t, ordered_tiles):
 #     #     f.writelines( '%s %s\n' % tuple(tu) for tu in final_barcode )
 
 
-Time = 1000
-Eden, Perimeter, Betti_1_total_vector, Betti_1_vector_changes, Barcode, Holes, Betti_1_total, Created_holes, Process, Perimeter_len = grow_eden(Time)
+Time = 2000
+Eden, Perimeter, Betti_1_total_vector, Betti_1_vector_changes, Barcode, Holes, Betti_1_total, Created_holes, Process, \
+    Perimeter_len, Tags, a = grow_eden(Time)
 # draw_polyomino(Eden, Time)
 print('betti_1: ', Betti_1_total)
 print('perimeter: ', Perimeter_len[-1])

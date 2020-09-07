@@ -35,6 +35,29 @@ def start_eden_2d_in_3d():
     return eden, perimeter
 
 
+def start_eden_2d_in_3d_line(length):
+    eden = {(0, 0, 0.5, 2): [1, 0, 0],
+            (1, 0, 0.5, 2): [0, 1, 0],
+            (-1, 0, 0.5, 2): [0, 1, 0],
+            (0, 1, 0.5, 2): [0, 1, 0],
+            (0, -1, 0.5, 2): [0, 1, 0],
+            (0.5, 0, 1, 0): [0, 1, 0],
+            (0, 0.5, 1, 1): [0, 1, 0],
+            (-0.5, 0, 1, 0): [0, 1, 0],
+            (0, -0.5, 1, 1): [0, 1, 0],
+            }
+    perimeter = list(eden.keys())
+    perimeter.remove((0, 0, 0.5, 2))
+
+    shift_neighbours = [shift_for_neighbors(0), shift_for_neighbors(1), shift_for_neighbors(2)]
+    for i in range(length):
+        eden[(i+1, 0, 0.5, 2)] = [1, 0, 0]
+        eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors((i+1, 0, 0.5, 2), eden, perimeter, shift_neighbours)
+        eden[(-(i+1), 0, 0.5, 2)] = [1, 0, 0]
+        eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors((-(i+1), 0, 0.5, 2), eden, perimeter, shift_neighbours)
+    return eden, perimeter
+
+
 def shift_for_neighbors(third_direction):
     directions = [0, 1, 2]
     directions.remove(third_direction)
@@ -54,7 +77,7 @@ def shift_for_neighbors(third_direction):
     return diff_nearest_tiles
 
 
-def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors, voids):
+def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors):
     tile = list(tile_selected)
     eden[tile_selected][2] = 0
     directions = [0, 1, 2]
@@ -67,7 +90,17 @@ def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors, voids):
     nearest_tiles = [tuple(n) for n in nearest_tiles]
     nearest_n = [0]*4
     for i, n in enumerate(nearest_tiles):
+        if n[2] <= 0:
+            continue
         if n in eden:
+            # if n in perimeter:
+            #     holes_voids = [v for v in voids if voids[v][2] != 0]
+            #     v = nearest_voids(n)
+            #     if v[0] in holes_voids and v[1] in holes_voids:
+            #         z = 1
+            #     else:
+            #         z = 0
+            #     eden[n][2] = z
             eden[n][1] += 1
             if eden[n][0] == 1:
                 if diff_nearest_tiles[i][directions[1]] > 0:
@@ -81,6 +114,13 @@ def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors, voids):
         else:
             eden[n] = [0, 1, 0]
             perimeter = perimeter + [n]
+            # holes_voids = [v for v in voids if voids[v][2] != 0]
+            # v = nearest_voids(n)
+            # if v[0] in holes_voids:
+            #     z = 1
+            # else:
+            #     z = 0
+            # eden[n] = [0, 1, z]
     return eden, perimeter, nearest_n, nearest_tiles
 
 
@@ -433,6 +473,18 @@ def tiles_from_voids(voids):
         shell = set([tuple(x) for x in shell])
         tiles = tiles.union(shell)
     return list(tiles)
+
+
+def final_inner_2d(holes, perimeter, eden):
+    inn = []
+    holes2 = [holes[x] for x in holes if len(holes[x]) > 1]
+    for hole in holes2:
+        tiles = tiles_from_voids(hole)
+        for x in tiles:
+            if x in perimeter:
+                inn.append(x)
+    return inn
+
 
 
 
