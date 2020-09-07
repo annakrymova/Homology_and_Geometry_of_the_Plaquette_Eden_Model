@@ -4,7 +4,8 @@ import numpy as np
 from Supplementary_functions import start_eden_2d_in_3d, actualize_neighbors, neighbours_diag, actualize_vef, \
     nearest_cubes, nearest_voids, dimension, shift_for_neighbors, shift_for_neighbours_diag, \
     check_cube_in_eden, update_void_dict, shift_vertices, return_vertices, euler_characteristic, \
-    return_betti_1, edge_voids, shift_for_edge_voids, barcode_forest, num_holes, tiles_from_voids
+    return_betti_1, edge_voids, shift_for_edge_voids, barcode_forest, num_holes, tiles_from_voids, \
+    final_inner_2d, start_eden_2d_in_3d_line
 
 from Drawing import draw_eden, draw_complex, draw_square, draw_barcode, draw_frequencies_1, draw_frequencies_2, \
     draw_diagram_holes, draw_tri_tetra
@@ -16,15 +17,19 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 
 
-def grow_eden(t, model):
+def grow_eden(t, model, length):
     vertices = 4
     edges = 4
-
-    eden, perimeter = start_eden_2d_in_3d()  # perimeter is an array consisting of all tiles that are on the perimeter
+    # if model == 'line':
+    #     eden, perimeter = start_eden_2d_in_3d_line(length)
+    # else:
+    #
+    eden, perimeter = start_eden_2d_in_3d()
+    # perimeter is an array consisting of all tiles that are on the perimeter
     inner_perimeter = []
     shift_for_vertices = shift_vertices(0), shift_vertices(1), shift_vertices(2)
-    process = [return_vertices((0, 0, 0, 2), shift_for_vertices)]  # an array consisting of all tiles that were added (specified by there 4 vertices)
-
+    # process = [return_vertices((0, 0, 0, 2), shift_for_vertices)]  # an array consisting of all tiles that were added (specified by there 4 vertices)
+    process = 0
     perimeter_len = []  # an array consisting of perimeter lengths at every time step
 
     shift_neighbours = [shift_for_neighbors(0), shift_for_neighbors(1), shift_for_neighbors(2)]
@@ -66,7 +71,6 @@ def grow_eden(t, model):
         perimeter_len = perimeter_len + [len(perimeter)]
         x = random.randint(0, len(perimeter) - 1)
         tile_selected = perimeter[x]
-
         # process += [return_vertices(tile_selected, shift_for_vertices)]
         perimeter.pop(x)
         eden[tile_selected][0] = 1
@@ -175,9 +179,15 @@ def grow_eden(t, model):
         for k in a:
             betti_2_frequencies[k].append(counter[k]/i)
 
-    return eden, perimeter, process, perimeter_len, betti_2_vector_changes, betti_2_total, betti_2_total_vector, barcode,\
-           betti_1_total, betti_1_total_vector, created_holes, holes, cubes_perimeter_edge, voids, tags, final_barcode
+    # perimeter_len = perimeter_len + [len(perimeter)]
+    # final_barcode = barcode_forest(barcode, tags)
+    # final_barcode.sort()
 
+    # return eden, perimeter, process, perimeter_len, betti_2_vector_changes, betti_2_total, betti_2_total_vector, barcode,\
+    #        betti_1_total, betti_1_total_vector, created_holes, holes, cubes_perimeter_edge, voids, tags, final_barcode,\
+    #        per_3d, betti_1_frequencies, betti_2_frequencies
+    # return per_3d, per_2d
+    return eden, holes, betti_2_total_vector, voids, betti_1_total_vector, tile_selected
 
 
 def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time, created_holes, tags,
@@ -185,6 +195,7 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
     """betti_2 can increase only"""
     tile = np.array(tile_selected)
     holes_voids = [v for v in voids if voids[v][2] != 0]
+
     v = nearest_voids(tile)
 
     if v[0] in holes_voids:
@@ -208,6 +219,7 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                 if (iterations + 1) == len(bfs[j]):  # the hole is filled
                     finished[j] = 1
         iterations += 1
+
     betti_2 = 1 - int(merged)
 
     if model == 'no_betti_2':
@@ -305,17 +317,24 @@ def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
     return bfs, merged, finished
 
 
-Time = 500
+Time = 100
+Model = 'no_betti_2_new'
+# Model = 'no_betti_2_new'
+# Model = 'general'
+Length = 10
+Eden, Holes, B2, Voids, B1, last_tile = grow_eden(Time, Model, Length)
+draw_eden(Eden, Time)
 # Eden, Perimeter, Process, Perimeter_len, Betti_2_vector_changes, Betti_2, Betti_2_total_vector, Barcode, Betti_1_total, \
 #     Betti_1_total_vector, Created_Holes, Holes, Cubes_perimeter_edge, Voids, Tags, Final_barcode, Per_3d, \
 #     Betti_1_frequencies, Betti_2_frequencies = grow_eden(Time)
-
+# print(Eden)
+draw_eden(Eden, Time)
 f1 = open("per_3d.txt", "w+")
 
-for q in range(1):
-    Perimeter, Inner_Perimeter, Eden = grow_eden(Time)
-f1.close()
-draw_barcode(Final_barcode, Time)
+# for q in range(1):
+#     P3, P2 = grow_eden(Time)
+# f1.close()
+# draw_barcode(Final_barcode, Time)
 # draw_eden(Eden, Time)
 
 
@@ -327,5 +346,7 @@ draw_barcode(Final_barcode, Time)
 # x_ = np.unique(x, axis=0)
 # x_ = np.delete(x_, [7, 13, 10], axis=0)
 # draw_complex(x_, 0, None)
+
+
 
 

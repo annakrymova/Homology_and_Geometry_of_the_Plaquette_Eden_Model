@@ -61,7 +61,6 @@ def draw_eden(eden, time):
     ax.w_yaxis.pane.fill = False
     ax.w_zaxis.pane.fill = False
     add_box(eden, ax)
-    add_box(eden, ax)
 
     for x in eden:
         if eden[x][0] == 1:
@@ -72,11 +71,18 @@ def draw_eden(eden, time):
 
 
 def draw_complex(eden, time, tile):
+    # ax.grid(True)
     plt.style.use('ggplot')
     fig = plt.figure()
-    ax = fig.gca(projection='3d')
+    ax = plt.axes(projection='3d')
     ax.axis('off')
-    # ax.grid(True)
+    fig.set_facecolor('w')
+    ax.set_facecolor('w')
+    ax.grid(False)
+    ax.w_xaxis.pane.fill = False
+    ax.w_yaxis.pane.fill = False
+    ax.w_zaxis.pane.fill = False
+    add_box(eden, ax)
 
     add_box(eden, ax, 5)
 
