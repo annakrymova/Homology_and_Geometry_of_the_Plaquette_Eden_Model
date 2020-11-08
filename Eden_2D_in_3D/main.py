@@ -8,10 +8,12 @@ from Supplementary_functions import start_eden_2d_in_3d, actualize_neighbors, ne
     final_inner_2d, start_eden_2d_in_3d_line
 
 from Drawing import draw_eden, draw_complex, draw_square, draw_barcode, draw_frequencies_1, draw_frequencies_2, \
-    draw_diagram_holes, draw_tri_tetra
+    draw_diagram_holes, draw_tri_tetra, plot_b_per
+import itertools
 import sys
 from itertools import groupby
 import collections
+from scipy.optimize import curve_fit
 
 import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
