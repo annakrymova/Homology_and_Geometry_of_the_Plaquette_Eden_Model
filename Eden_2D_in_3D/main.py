@@ -321,13 +321,58 @@ def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
     return bfs, merged, finished
 
 
-Time = 100
-Model = 'no_betti_2_new'
-# Model = 'no_betti_2_new'
-# Model = 'general'
-Length = 10
-Eden, Holes, B2, Voids, B1, last_tile = grow_eden(Time, Model, Length)
-draw_eden(Eden, Time)
+
+# result = grow_eden()
+Time = 20000
+Model = 'standard'
+Betti_1_frequencies, Betti_2_frequencies, Betti_1_total_vector, p2d, p3d, Betti_2_total_vector, Eden, Process, Created_holes, Holes = grow_eden(Time, Model, 10)
+
+N = 00000
+a = np.array([Betti_1_total_vector, Betti_2_total_vector, p2d[0], p3d[0]])
+b = np.transpose(a)
+np.savetxt(str(Time)+".csv", b, delimiter=",", header="b1, b2, p2, p3")
+
+if not os.path.exists('pictures/'+str(int(Time/1000))+'k/'):
+    os.makedirs('pictures/'+str(int(Time/1000))+'k/')
+
+Tricube, Tricube_f, Tetracube, Tetracube_f = num_holes(Created_holes, Holes)
+draw_tri_tetra(Tricube, Tricube_f, Tetracube, Tetracube_f, Time)
+draw_diagram_holes(Created_holes, Holes, Time)
+plot_b_per(Betti_1_total_vector, Betti_2_total_vector, p2d[0], p3d[0], Time, N)
+
+# print(Created_holes[:3])
+# max = 0
+# hole = Created_holes[0][3]
+# for x in Created_holes:
+#     if x[2] > max and x[0][1] == 1:
+#         max = x[2]
+#         num_hole = x[3]
+
+print('a')
+
+
+
+
+
+
+
+
+
+
+
+# Time = 100
+# Model = 'standard'
+# Betti_1_frequencies, Betti_2_frequencies, Betti_1_total_vector, p2d, p3d, Betti_2_total_vector, Eden, Process, Created_holes, Holes = grow_eden(Time, Model, 10)
+# a = 10
+# print(Eden)
+# Eden = {(0,0,0.5,2): [1]}
+# list_cubes = [nearest_cubes(x) for x in Eden if Eden[x][0] == 1]
+# tiles = [x for x in Eden if Eden[x][0] == 1]
+# list_cubes = list(itertools.chain.from_iterable(list_cubes))
+# list_cubes = list(itertools.chain.from_iterable(list_cubes))
+# list_cubes = list(dict.fromkeys(list_cubes))
+# draw_complex(list_cubes, 0, tiles)
+# draw_eden(Eden, Time)
 # Eden, Perimeter, Process, Perimeter_len, Betti_2_vector_changes, Betti_2, Betti_2_total_vector, Barcode, Betti_1_total, \
 #     Betti_1_total_vector, Created_Holes, Holes, Cubes_perimeter_edge, Voids, Tags, Final_barcode, Per_3d, \
 #     Betti_1_frequencies, Betti_2_frequencies = grow_eden(Time)
