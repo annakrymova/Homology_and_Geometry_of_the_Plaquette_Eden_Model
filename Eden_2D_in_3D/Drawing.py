@@ -155,7 +155,7 @@ def draw_frequencies_2(dict):
     fig.savefig('pictures/fr_b_2.png', format='png', dpi=1200)
 
 
-def draw_diagram_holes(created_holes, holes):
+def draw_diagram_holes(created_holes, holes, time):
     fr_cr = [created_holes[i][-2] for i in range(len(created_holes))]
     fr_cr.sort()
     fr_final = [len(holes[i]) for i in holes]
@@ -200,10 +200,10 @@ def draw_diagram_holes(created_holes, holes):
     fig.tight_layout()
 
     plt.show()
-    fig.savefig('pictures/holes.png', format='png', dpi=1200)
+    fig.savefig('pictures/'+str(int(time/1000))+'k/holes.png', format='png', dpi=1200)
 
 
-def draw_tri_tetra(tri, tri_f, tetra, tetra_f):
+def draw_tri_tetra(tri, tri_f, tetra, tetra_f, time):
     width = 0.35
     labels = list(tri)+list(tetra)
     x = np.arange(len(labels))
@@ -224,7 +224,7 @@ def draw_tri_tetra(tri, tri_f, tetra, tetra_f):
     fig.tight_layout()
 
     plt.show()
-    fig.savefig('pictures/tri-tetra-cubes.png', format='png', dpi=1200)
+    fig.savefig('pictures/'+str(int(time/1000))+'k/tri-tetra-cubes.png', format='png', dpi=1200)
 
 
 def plot_b_per(b1, b2, p2, p3, time, N=0):
@@ -286,7 +286,7 @@ def plot_b_per(b1, b2, p2, p3, time, N=0):
     plt.ylabel('data')
     plt.legend(prop={'size': 6})
     plt.tight_layout()
-    plt.savefig('pictures/200k/per-b-time_'+str(time)+'.png', dpi=1200)
+    plt.savefig('pictures/'+str(int(time/1000))+'k/per-b-time_'+str(time)+'.png', dpi=1200)
     plt.show()
 
 
@@ -359,3 +359,5 @@ def draw_square_0(x, y, col='gray', alpha=1, ls=0.35):
 #
 # draw_eden(Eden, 0)
 # plt.show()
+
+
