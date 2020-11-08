@@ -3,9 +3,12 @@ import sys
 
 
 def dimension(coordinates):
-    for i in range(3):
-        if coordinates[i] % 1 == 0.5:
-            d = i
+    if coordinates[0] % 1 == 0.5:
+        d = 0
+    elif coordinates[1] % 1 == 0.5:
+        d = 1
+    else:
+        d = 2
     return d
 
 
@@ -90,8 +93,8 @@ def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors):
     nearest_tiles = [tuple(n) for n in nearest_tiles]
     nearest_n = [0]*4
     for i, n in enumerate(nearest_tiles):
-        if n[2] <= 0:
-            continue
+        # if n[2] <= 0:
+        #     continue
         if n in eden:
             # if n in perimeter:
             #     holes_voids = [v for v in voids if voids[v][2] != 0]
@@ -165,9 +168,9 @@ def neighbours_diag(tile_selected, eden, shift_diag_neighbours):
 
     diff_diag_all = shift_diag_neighbours[int(tile[3])]
     nearest_diag_tiles = diff_diag_all + (tile[:3]+[0])
-    for i, n in enumerate(nearest_diag_tiles):
+    for n in nearest_diag_tiles:
         n[3] = dimension(n[:3])
-    nearest_diag_tiles = [tuple(n) for n in nearest_diag_tiles]
+    nearest_diag_tiles = list(map(tuple, nearest_diag_tiles))
 
     nearest_diag = [0] * 4
     for i in range(0, len(nearest_diag_tiles)):
@@ -175,11 +178,11 @@ def neighbours_diag(tile_selected, eden, shift_diag_neighbours):
             if eden[nearest_diag_tiles[i]][0] == 1:
                 if np.array_equal((diff_diag_all[i][directions] > 0), [True, True]):
                     nearest_diag[0] = 1
-                if np.array_equal((diff_diag_all[i][directions] > 0), [True, False]):
+                elif np.array_equal((diff_diag_all[i][directions] > 0), [True, False]):
                     nearest_diag[1] = 1
-                if np.array_equal((diff_diag_all[i][directions] > 0), [False, False]):
+                elif np.array_equal((diff_diag_all[i][directions] > 0), [False, False]):
                     nearest_diag[2] = 1
-                if np.array_equal((diff_diag_all[i][directions] > 0), [False, True]):
+                else:
                     nearest_diag[3] = 1
     return nearest_diag, nearest_diag_tiles
 
