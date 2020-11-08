@@ -194,8 +194,6 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                       inner_perimeter, perimeter, model):  # , nearest_n, nearest_n_tiles):
     """betti_2 can increase only"""
     tile = np.array(tile_selected)
-    holes_voids = [v for v in voids if voids[v][2] != 0]
-
     v = nearest_voids(tile)
 
     if v[0] in holes_voids:
@@ -242,6 +240,8 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                     total_holes += 1
                     holes[total_holes] = bfs[i].copy()
                     for void in bfs[i]:
+                        if void not in holes_voids:
+                            holes_voids += [void]
                         if void in voids:
                             voids[void][2] = total_holes
                         else:
@@ -254,6 +254,8 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                     total_holes += 1
                     holes[total_holes] = bfs[i].copy()
                     for void in bfs[i]:
+                        if void not in holes_voids:
+                            holes_voids += [void]
                         if void in voids:
                             voids[void][2] = total_holes
                         else:
@@ -287,7 +289,7 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                         inner_perimeter.append(x)
                         eden[x][2] = 1
 
-    return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter
+    return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids
 
 
 def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
@@ -328,8 +330,8 @@ draw_eden(Eden, Time)
 #     Betti_1_total_vector, Created_Holes, Holes, Cubes_perimeter_edge, Voids, Tags, Final_barcode, Per_3d, \
 #     Betti_1_frequencies, Betti_2_frequencies = grow_eden(Time)
 # print(Eden)
-draw_eden(Eden, Time)
-f1 = open("per_3d.txt", "w+")
+# draw_complex(Eden, Time, last_tile)
+# f1 = open("per_3d.txt", "w+")
 
 # for q in range(1):
 #     P3, P2 = grow_eden(Time)
