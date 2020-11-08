@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import collections
 import pandas as pd
+from scipy.optimize import curve_fit
 
 
-def draw_square(x0, y0, z0, d, ax, alpha=0.5, col='gray', ls=0.45):
+def draw_square(x0, y0, z0, d, ax, alpha=1, col='gray', ls=0.47):
     """With center at x, y, z draw a square of area ls^2"""
     """d = 1 if square is parallel to xOy, d = 2 if x0z, d = 3 if y0z"""
     """ls is a half of square side"""
@@ -64,13 +65,13 @@ def draw_eden(eden, time):
 
     for x in eden:
         if eden[x][0] == 1:
-            draw_square(x[0], x[1], x[2], x[3], ax=ax, col='tab:blue')
+            draw_square(x[0], x[1], x[2], x[3], ax=ax, col='grey')#'tab:blue')
     # draw_square(0, 0, 0.5, 2, ax=ax, col='green')
-    plt.savefig('pictures/eden/eden_' + str(time) + '.png', format='png', dpi=1200)
+    plt.savefig('pictures/eden/new/eden_' + str(time) + '.png', format='png', dpi=1200)
     # plt.show()
 
 
-def draw_complex(eden, time, tile):
+def draw_complex(eden, time, tile = None):
     # ax.grid(True)
     plt.style.use('ggplot')
     fig = plt.figure()
@@ -82,17 +83,19 @@ def draw_complex(eden, time, tile):
     ax.w_xaxis.pane.fill = False
     ax.w_yaxis.pane.fill = False
     ax.w_zaxis.pane.fill = False
-    add_box(eden, ax)
-
-    add_box(eden, ax, 5)
+    # add_box(eden, ax)
+    #
+    # add_box(eden, ax, 5)
 
     for x in eden:
-        if eden[x][0] == 1 and x != tile:
-            draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.5, col='dimgray')
+        # if eden[x][0] == 1 and x != tile:
+        draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.3, col='dimgray')
         # if eden[x][0] == 0:
         #     draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.3, col='lightgrey')
-    draw_square(0, 0, 0.5, 2, ax=ax, col='green')
-    draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, col='orange')
+    for x in tile:
+        draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=1, col='dimgrey')
+    # draw_square(0, 0, 0.5, 2, ax=ax, col='green')
+    # draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, col='darkorange')
     plt.savefig('pictures/eden_' + str(time) + '.png', format='png', dpi=1200)
     plt.show()
 
@@ -116,7 +119,7 @@ def draw_barcode(barcode, time):
     plt.show()
 
 
-def draw_frequencies_1(dict):
+def draw_frequencies_1(dict, time):
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     l = len(dict[0])
@@ -127,12 +130,12 @@ def draw_frequencies_1(dict):
     ax.plot(range(shift, l), dict[2][shift:], color='tab:blue', label='2')
 
     plt.yscale('log')
-    ax.set_title('betti_1 frequencies')
-    ax.set_ylabel('frequency of change in betti_1')
-    ax.set_xlabel('time')
+    # ax.set_title('betti_1 frequencies')
+    ax.set_ylabel(r'Frequency of Change in $\beta_1$')
+    ax.set_xlabel('t')
     ax.legend()
     plt.show()
-    fig.savefig('pictures/fr_b_1.png', format='png', dpi=1200)
+    fig.savefig('pictures/fr_b_1_'+str(time)+'.png', format='png', dpi=1200)
 
 
 def draw_frequencies_2(dict):
@@ -144,9 +147,9 @@ def draw_frequencies_2(dict):
     ax.plot(range(shift, l), dict[1][shift:], color='tab:green', label='1')
 
     plt.yscale('log')
-    ax.set_title('betti_2 frequencies')
-    ax.set_ylabel('frequency of change in betti_2')
-    ax.set_xlabel('time')
+    # ax.set_title('betti_2 frequencies')
+    ax.set_ylabel(r'Frequency of Change in $\beta_2$')
+    ax.set_xlabel('t')
     ax.legend()
     plt.show()
     fig.savefig('pictures/fr_b_2.png', format='png', dpi=1200)
@@ -181,6 +184,17 @@ def draw_diagram_holes(created_holes, holes):
     ax.set_xlabel('Volume')
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
+    if len(labels) >= 50:
+        plt.setp(ax.get_xticklabels(), fontsize=4)
+    elif len(labels) >= 45:
+        plt.setp(ax.get_xticklabels(), fontsize=5)
+    elif len(labels) >= 40:
+        plt.setp(ax.get_xticklabels(), fontsize=6)
+    elif len(labels) >= 30:
+        plt.setp(ax.get_xticklabels(), fontsize=7)
+    elif len(labels) >= 20:
+        plt.setp(ax.get_xticklabels(), fontsize=6)
+
     ax.legend()
 
     fig.tight_layout()
@@ -190,20 +204,20 @@ def draw_diagram_holes(created_holes, holes):
 
 
 def draw_tri_tetra(tri, tri_f, tetra, tetra_f):
-    width = 0.6
+    width = 0.35
     labels = list(tri)+list(tetra)
     x = np.arange(len(labels))
     fig, ax = plt.subplots()
     plt.yscale('log')
 
-    ax.bar(x[:2], tri.values(), width, label='Tricubes Total', color='navy')
-    ax.bar(x[:2], tri_f.values(), width, label='Tricubes Final', color='royalblue')
-    ax.bar(x[2:], tetra.values(), width, label='Tetracubes Total', color='chocolate')
-    ax.bar(x[2:], tetra_f.values(), width, label='Tetracubes Final', color='orange')
+    ax.bar(x[:2]-width/2, tri.values(), width, label='Tricubes Total', color='navy')
+    ax.bar(x[:2]+width/2, tri_f.values(), width, label='Tricubes Final', color='royalblue')
+    ax.bar(x[2:]-width/2, tetra.values(), width, label='Tetracubes Total', color='chocolate')
+    ax.bar(x[2:]+width/2, tetra_f.values(), width, label='Tetracubes Final', color='orange')
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel('Frequency of Number of Holes')
-    ax.set_xlabel('Volume')
+    ax.set_xlabel('Type of a Hole')
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
     ax.legend()
@@ -211,6 +225,70 @@ def draw_tri_tetra(tri, tri_f, tetra, tetra_f):
 
     plt.show()
     fig.savefig('pictures/tri-tetra-cubes.png', format='png', dpi=1200)
+
+
+def plot_b_per(b1, b2, p2, p3, time, N=0):
+    n = 0
+    nn =0
+
+    def func(x, a, b, c):
+        return a * x ** b + c
+    ydata_f = b1
+    xdata_f = range(len(ydata_f))
+    ydata = ydata_f[N:]
+    xdata = xdata_f[N:]
+    # plt.xscale('log')
+    # plt.yscale('log')
+    plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+    plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+    plt.plot(xdata_f[n:], ydata_f[n:], 'm-', label=r'$\beta_1(t)$ data',  linewidth=0.75)
+    try:
+        popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+    except:
+        popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -10], [10., 2., 900]))
+
+    plt.plot(xdata_f[n:], func(xdata_f[n:], *popt), 'm--', label=r'fit: $y=%5.2f x^{%5.3f}%+5.1f$' % tuple(popt), linewidth=0.75)
+
+    ydata_f = b2
+    xdata_f = range(len(ydata_f))
+    ydata = ydata_f[N:]
+    xdata = xdata_f[N:]
+    plt.plot(xdata_f[n:], ydata_f[n:], 'b-', label=r'$\beta_2(t)$ data',  linewidth=0.75)
+    # try:
+    popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -5000], [1., 1.5, 000]))
+    # except:
+    #   popt, pcov = curve_fit(func, xdata, ydata, bounds=([0.,0., -10], [1., 1.5, 10]))
+    plt.plot(xdata_f[nn:], func(xdata_f[nn:], *popt), 'b--', label=r'fit: $y=%5.3f x^{%5.3f}%+5.3f$' % tuple(popt),  linewidth=0.75)
+
+    # Constrain the optimization to the linear function
+    try:
+        popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -np.inf], [1., 1., np.inf]))
+    except:
+        popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -5000], [1., 1., 10]))
+
+    plt.plot(xdata_f[nn+n:], func(xdata_f[nn+n:], *popt), 'g--', label=r'fit: $y=%5.3f x^{%5.3f}%+5.3f$' % tuple(popt),  linewidth=0.75)
+
+
+    # def func(x, a, b):
+    #     return a * x **b
+    # ydata = p2
+    # xdata = range(len(ydata))
+    # plt.plot(xdata[n:], ydata[n:], color='orange', linestyle='solid', label=r'$P_{2}(t)$ data',  linewidth=0.75)
+    # popt, pcov = curve_fit(func, xdata, ydata)
+    # plt.plot(xdata[n:], func(xdata[n:], *popt), color='orange', linestyle='dashed', label=r'fit: $y=%5.2f x^{%5.3f}$' % tuple(popt),  linewidth=0.75)
+    # ydata = p3
+    # xdata = range(len(ydata))
+    # plt.plot(xdata[n:], ydata[n:], color='lightblue', linestyle='solid', label=r'$P_{3}(t)$ data',  linewidth=0.75)
+    # popt, pcov = curve_fit(func, xdata, ydata)
+    # plt.plot(xdata[n:], func(xdata[n:], *popt), color='lightblue', linestyle='dashed', label=r'fit: $y=%5.2f x^{%5.3f}$' % tuple(popt),  linewidth=0.75)
+
+    plt.xlabel('t')
+    plt.ylabel('data')
+    plt.legend(prop={'size': 6})
+    plt.tight_layout()
+    plt.savefig('pictures/200k/per-b-time_'+str(time)+'.png', dpi=1200)
+    plt.show()
+
 
 
 def draw_square_0(x, y, col='gray', alpha=1, ls=0.35):
@@ -271,7 +349,7 @@ def draw_square_0(x, y, col='gray', alpha=1, ls=0.35):
 # plt.savefig('pictures/square', format='png', dpi=1200)
 # plt.show()
 
-#
+# #
 # Eden = {(0, 0, 0.5, 2): [1],
 #             (0, 0, -0.5, 2): [1],
 #             (-0.5, 0, 0, 0): [1],
