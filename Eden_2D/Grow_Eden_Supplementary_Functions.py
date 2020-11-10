@@ -1,5 +1,5 @@
+import numpy as np
 from Drawing import draw_polyomino
-
 
 def hamming2(s1, s2):
     """Calculate the Hamming distance between two bit strings"""
@@ -266,3 +266,57 @@ def increment_betti_1_euler(vertices, edges, time):
     return 1 - vertices + edges - time - 1
 
 
+def num_holes(created_holes, holes):
+    tromino = dict.fromkeys(['l', 'i'], 0)
+    tromino_f = dict.fromkeys(['l', 'i'], 0)
+    tetromino = dict.fromkeys(['I', 'L', 'T', 'O', 'Z'], 0)
+    tetromino_f = dict.fromkeys(['I', 'L', 'T', 'O', 'Z'], 0)
+
+    total_3 = [i for i in created_holes if i[-1] == 3]
+    final_3 = [holes[i] for i in holes if len(holes[i]) == 3]
+    total_4 = [i for i in created_holes if i[-1] == 4]
+    final_4 = [holes[i] for i in holes if len(holes[i]) == 4]
+
+    # tromino case
+    for x in total_3:
+        j = 0
+        for i in range(2):
+            if x[-2][0][i] == x[-2][1][i] == x[-2][2][i]:
+                j += 1
+        long = j
+        tromino['i'] += long
+        tromino['l'] += (1 - long)
+        if x[-2] in final_3:
+            tromino_f['i'] += long
+            tromino_f['l'] += (1 - long)
+    # tetromino case
+    for x in total_4:
+        # check that x is plane
+
+        dist = distances(x[-2])
+        if dist == [2,2,3]:
+            typ = 'I'
+        elif dist == [1.4, 2, 2.2]:
+            typ = 'L'
+        elif dist == [1.4, 1.4, 2]:
+            typ = 'T'
+        elif dist == [1, 1.4, 1.4]:
+            typ = 'O'
+        elif dist == [1.4, 1.4, 2.2]:
+            typ = 'Z'
+        tetromino[typ] += 1
+        if x[-3] in final_4:
+            tetromino_f[typ] += 1
+    return tromino, tromino_f, tetromino, tetromino_f
+
+
+def distances(hole):
+    hole = [np.array(k) for k in hole]
+    dist = []
+    for i in range(4):
+        for j in range(4):
+            if i < j:
+                dist.append(np.linalg.norm(hole[i]-hole[j]))
+    dist.sort()
+    dist = [round(i, 1) for i in dist]
+    return dist[3:]
