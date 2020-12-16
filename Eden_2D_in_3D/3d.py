@@ -8,6 +8,8 @@ Created on Thu Nov 21 19:34:33 2019
 import random
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import gudhi as gd
+import numpy as np
 
 try:
     from line_profiler import LineProfiler
@@ -43,14 +45,9 @@ def hamming2(s1, s2):
     assert len(s1) == len(s2)
     return sum(c1 != c2 for c1, c2 in zip(s1, s2))
 
-
 def Diff(li1, li2):
     li_dif = [i for i in li1 + li2 if i not in li1 or i not in li2]
     return li_dif
-
-
-##############
-
 
 def draw_barcode(barcode, time):
     """ """
@@ -72,7 +69,6 @@ def draw_barcode(barcode, time):
     fig.savefig('5000.png')
     plt.show()
 
-
 def start_eden():
     eden = {(0, 0, 0): [1, 0, 0],
             (0, 0, 1): [0, 1, 0],
@@ -83,7 +79,6 @@ def start_eden():
             (0, -1, 0): [0, 1, 0]}
     perimeter = [(0, 0, 1), (0, 0, -1), (1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0)]
     return eden, perimeter
-
 
 def actualize_neighbors(tile_selected, eden, perimeter):
     n3 = [tile_selected[0] + 1, tile_selected[1], tile_selected[2]]
@@ -154,7 +149,6 @@ def actualize_neighbors(tile_selected, eden, perimeter):
 
     return eden, perimeter, nearest_n, nearest_n_tiles
 
-
 def neighbours(eden, tile_selected):
     ###### For the Euler Characteristic
 
@@ -192,7 +186,6 @@ def neighbours(eden, tile_selected):
             if eden[nn[i]][0] == 1:
                 n[i] = 1
     return n
-
 
 def actualize_vef(vertices, edges, faces, nearest_n, n):
     v = [1] * 8
@@ -333,10 +326,8 @@ def actualize_vef(vertices, edges, faces, nearest_n, n):
 
     return vertices, edges, faces, sum(v), sum(e), sum(f)
 
-
 def euler_characteristic(k0, k1, k2, k3):
     return k0 - k1 + k2 - k3
-
 
 def add_neighbours_bds(bds, j, iterations, num_possible_components, merged, finished, eden):
     tile_selected = bds[j][iterations]
@@ -408,7 +399,6 @@ def add_neighbours_bds(bds, j, iterations, num_possible_components, merged, fini
                         merged[t] = 1
                         finished[t] = 1
     return bds, merged, finished
-
 
 def increment_betti_2(eden, tile_selected, nearest_n, nearest_n_tiles, barcode, time, holes, total_holes, created_holes,
                       tags, model):
@@ -508,7 +498,6 @@ def increment_betti_2(eden, tile_selected, nearest_n, nearest_n_tiles, barcode, 
 
     return betti_2, total_holes, eden, barcode, holes, created_holes, tags
 
-
 def return_betti_1(betti_2, euler_ch):
     # X = V - E + F - Cubes
     # X = b_0 - b_1 + b_2
@@ -516,8 +505,6 @@ def return_betti_1(betti_2, euler_ch):
     # Cubes us exactly the time because we add one cube at each time
     return 1 + betti_2 - euler_ch
 
-
-##########################
 def barcode_forest(barcode, tags):
     bars_pure = []
     bars_hole = []
@@ -533,7 +520,6 @@ def barcode_forest(barcode, tags):
         #        print(b)
         bars_hole = bars_hole + bars_from_tree(b, x)
     return bars_pure + bars_hole
-
 
 def bars_from_tree(b, tag):
     n = max(len(x) for x in b)
@@ -574,10 +560,6 @@ def bars_from_tree(b, tag):
     bars = bars + [b[(tag,)]]
     return bars
 
-
-#######################
-
-
 def convert_perseus(process):
     min_x = min(process, key=lambda x: x[0])
     max_x = max(process, key=lambda x: x[0])
@@ -604,10 +586,6 @@ def convert_perseus(process):
                     else:
                         f.writelines('inf\n')
 
-
-#                       print(-1)
-
-
 def convert_perseus_2(process):
     dimension = 3
     with open('1000000_3D_12_final.txt', 'w') as f:
@@ -621,7 +599,7 @@ def convert_perseus_2(process):
 
 ##########################
 
-@do_profile(follow=[increment_betti_2])
+# @do_profile(follow=[increment_betti_2])
 def grow_eden(t=10000, model='no_betti_2_new'):
     vertices = 8
     edges = 12
@@ -707,175 +685,35 @@ def grow_eden(t=10000, model='no_betti_2_new'):
         perimeter_len = perimeter_len + [l]
         euler_char_prev = euler_character
 
-    #        final_barcode = barcode_forest(barcode, tags)
+    final_barcode = barcode_forest(barcode, tags)
 
     pbar.close()
     return eden, perimeter, betti_2_total_vector, betti_2_vector_changes, barcode, holes,\
            betti_1_total, betti_1_total_vector, created_holes, \
-           process, perimeter_len, skipped, size
+           process, perimeter_len, skipped, size, final_barcode
+
+# result = grow_eden()
 
 
-def grow_eden(t=1000, model='no_betti_2'):
-    vertices = 8
-    edges = 12
-    faces = 6
-
-    process = [(0, 0, 0)]
-    perimeter_len = [6]
-    eden, perimeter = start_eden()
-
-    l = len(perimeter)
-
-    holes = {}
-    total_holes = 0
-    barcode = {}
-    tags = []
-    created_holes = []
-
-    betti_2_total = 0
-    betti_2_vector_changes = [0]
-    betti_2_total_vector = [0]
-
-    betti_1_total_vector = [0]
-
-    skipped = 0
-    size = 1
-
-    pbar = tqdm(total=t)
-    pbar.update(1)
-    # for i in tqdm(range(1, t)):
-    # for i in (range(1, t)):
-    while size < t:
-        # eden_old = copy.deepcopy(eden)
-        # perimeter_old = copy.deepcopy(perimeter)
-        # print(size)
-        l = len(perimeter)
-
-        x = random.randint(0, l - 1)
-        tile_selected = perimeter[x]
-        perimeter.pop(x)
-
-        eden[tile_selected][0] = 1
-        process = process + [tile_selected]
-
-        eden, perimeter, nearest_n, nearest_n_tiles = actualize_neighbors(tile_selected, eden, perimeter)
-        n = neighbours(eden, tile_selected)
-
-        betti_2, total_holes, eden, barcode, holes, created_holes, tags = increment_betti_2(eden, tile_selected,
-                                                                                            nearest_n, nearest_n_tiles,
-                                                                                            barcode, size, holes,
-                                                                                            total_holes, created_holes,
-                                                                                            tags, model)
-
-        vertices, edges, faces, v_new, e_new, f_new = actualize_vef(vertices, edges, faces, nearest_n, n)
-
-        if betti_2 >= 1 and model == 'no_betti_2':
-            skipped += 1
-            perimeter += [tile_selected]
-            for i, tile in enumerate(nearest_n_tiles):
-                eden[tile][1] -= 1
-            eden[tile_selected][0] = 0
-            # print(eden[tile_selected][0])
-            del process[-1]
-            vertices = vertices - v_new
-            edges = edges - e_new
-            faces = faces - f_new
-            # total_holes = total_holes_old
-            # barcode = barcode_old
-            # holes = holes_old
-            # created_holes = created_holes_old
-            # tags = tags_old
-            continue
-
-        pbar.update(1)
-
-        euler_character = euler_characteristic(vertices, edges, faces, size + 1)
-
-        size += 1
-        betti_2_vector_changes += [betti_2]
-        betti_2_total += betti_2
-        betti_2_total_vector += [betti_2_total]
-
-        betti_1_total = return_betti_1(betti_2_total, euler_character)
-        betti_1_total_vector += [betti_1_total]
-
-        l = len(perimeter)
-        perimeter_len = perimeter_len + [l]
-
-    #        final_barcode = barcode_forest(barcode, tags)
-
-    pbar.close()
-    return eden, perimeter, betti_2_total_vector, betti_2_vector_changes, barcode, holes, betti_1_total, betti_1_total_vector, \
-           created_holes, process, perimeter_len, skipped, size\
-        # , final_barcode
-
-
-result = grow_eden()
-
-
-def grow_eden_debuging(t, ordered_tiles):
-    vertices = 8
-    edges = 12
-    faces = 6
-
-    process = [(0, 0, 0)]
-
-    eden, perimeter = start_eden()
-
-    holes = {}
-    total_holes = 0
-    barcode = {}
-    Areas = []
-    tags = []
-
-    # betti_2_total = 0
-    # betti_2_vector = []
-    # betti_1_total = 0
-    # betti_1_total_vector = []
-
-    betti_2_total = 0
-    betti_2_vector_changes = [0]
-    betti_2_total_vector = [0]
-
-    betti_1_total_vector = [0]
-
-    for i in tqdm(range(1, t)):
-        tile_selected = ordered_tiles[i - 1]
-        perimeter.remove(tile_selected)
-
-        eden[tile_selected][0] = 1
-        eden, perimeter, nearest_n, nearest_n_tiles = actualize_neighbors(tile_selected, eden, perimeter)
-        n = neighbours(eden, tile_selected)
-
-        eden[tile_selected][0] = 1
-        process = process + [tile_selected]
-
-        eden, perimeter, nearest_n, nearest_n_tiles = actualize_neighbors(tile_selected, eden, perimeter)
-        n = neighbours(eden, tile_selected)
-
-        vertices, edges, faces = actualize_vef(vertices, edges, faces, nearest_n, n)
-        betti_2, total_holes, eden, barcode, holes, created_holes, tags = increment_betti_2(eden,
-                                                                                            tile_selected, nearest_n,
-                                                                                            nearest_n_tiles,
-                                                                                            barcode, i, holes,
-                                                                                            total_holes, created_holes,
-                                                                                            tags)
-        # betti_2_vector = betti_2_vector + [betti_2]
-        # betti_2_total = betti_2_total + betti_2
-        #
-        # betti_1_total_vector = betti_1_total_vector + [increment_betti_1(vertices, edges, faces, i, betti_2_total)]
-
-        betti_1_total = increment_betti_1(vertices, edges, faces, i-skipped, betti_2_total)
-        betti_1_total_vector += [betti_1_total]
-
-
-    #        final_barcode = barcode_forest(barcode, tags)
-
-    return eden, perimeter, betti_2_vector, betti_1_total_vector, barcode, holes, betti_2_total, betti_1_total, created_holes, process  # , tags, final_barcode
-
-
-Time = 100000
+Time = 10000
 Model = 'no_betti_2_new'
 Eden, Perimeter, Betti_2_total_vector, Betti_2_vector_changes, Barcode, Holes, Betti_1_total, \
-    Betti_1_total_vector, Created_holes, Process, Perimeter_len, Skipped, I = grow_eden(Time, Model)
-# a = 10
+    Betti_1_total_vector, Created_holes, Process, Perimeter_len, Skipped, I, Final_barcode = grow_eden(Time, Model)
+
+convert_perseus(Process)
+
+eden_model = gd.CubicalComplex(perseus_file='300000_3D_1_final.txt')
+
+eden_model.persistence()
+A = eden_model.persistence_intervals_in_dimension(1)
+B = [elem for elem in A if elem[1] == float('inf')]
+A = eden_model.persistence_intervals_in_dimension(2)
+B = [elem for elem in A if elem[1] == float('inf')]
+final = np.array(Final_barcode)
+A_sorted = A.sort()
+final_sorted = final.sort()
+print(A_sorted == final_sorted)
+# gd.plot_persistence_diagram(eden_model.persistence(), legend=True)
+# gd.plot_persistence_barcode(eden_model.persistence())
+gd.plot_persistence_barcode(eden_model.persistence(), legend=True)
+a = 10
