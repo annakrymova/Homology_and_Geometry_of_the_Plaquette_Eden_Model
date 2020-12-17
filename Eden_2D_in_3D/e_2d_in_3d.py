@@ -26,13 +26,14 @@ def grow_eden(t, model):
     shift_diag_neighbours = [shift_for_neighbours_diag(0), shift_for_neighbours_diag(1), shift_for_neighbours_diag(2)]
 
     v = nearest_voids((0, 0, 0, 2))
-    voids = {v[0]: [0, [0, 0, 0, 0, 1, 0], 0, 0], v[1]: [0, [0, 0, 0, 0, 0, 1], 0, 0]}
-    """dictionary, its items are (x,y,z): [filled, [f0, f1, f2, f3, f4, f5], h, t]
+    voids = {v[0]: [0, [0, 0, 0, 0, 1, 0], 0, 0], v[1]: [0, [0, 0, 0, 0, 0, 1], 0, 0, 0]}
+    """dictionary, its items are (x,y,z): [filled, [f0, f1, f2, f3, f4, f5], h, t, v]
     where (x,y,z) is a cube's center
     filled = 1 if all cube's faces are in complex
     f0 = 1 if the face number 0 in in complex amd so on
     h = 0 if the void is not in a hole and h = num_hole if the void is in a hole
-    t is a time when the void was filled"""
+    t is time when the void was filled
+    v is time when the void created a hole of volume 1"""
 
     """holes is a dictionary containing all VOIDS that create holes"""
     holes = {}
@@ -55,6 +56,7 @@ def grow_eden(t, model):
     holes_voids = []
 
     skipped = 0
+    n_filled_cubes = 0
     size = 1
 
     pbar = tqdm(total=t)
@@ -78,12 +80,12 @@ def grow_eden(t, model):
         if int(sum(faces[1]) / 6) == 1:
             t1 = size
         if v[0] not in voids:
-            voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0, t0]
+            voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0, t0, 0]
         else:
             voids[v[0]][0:2] = [int(sum(faces[0]) / 6), faces[0]]
             voids[v[0]][3] = t0
         if v[1] not in voids:
-            voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0, t1]
+            voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0, t1, 0]
         else:
             voids[v[1]][0:2] = [int(sum(faces[1]) / 6), faces[1]]
             voids[v[1]][3] = t1
@@ -93,12 +95,12 @@ def grow_eden(t, model):
         nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
         vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
 
-        euler_character = euler_characteristic(vertices, edges, size - skipped + 1)
+        euler_character = euler_characteristic(vertices, edges, size - skipped + 1, n_filled_cubes)
 
-        if (model == 1 and euler_character <= euler_char_prev) or (model == 0):
-            betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids = \
-                increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, size,
-                                  created_holes, tags, inner_perimeter, perimeter, model, holes_voids)
+        if (model == 1 and euler_character <= euler_char_prev) or model == 0 or model == 2:
+            betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids,\
+                n_filled_cubes = increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, size,
+                                                   created_holes, tags, inner_perimeter, perimeter, model, holes_voids, n_filled_cubes)
 
         if euler_character > euler_char_prev and model == 1:
             skipped += 1
@@ -173,9 +175,7 @@ def grow_eden(t, model):
 
 """SUPPLEMENTARY FUNCTIONS"""
 def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time, created_holes, tags,
-                      inner_perimeter, perimeter, model, holes_voids):  # , nearest_n, nearest_n_tiles):
-    # betti_2 = 0
-    # return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids
+                      inner_perimeter, perimeter, model, holes_voids, n_filled_cubes):  # , nearest_n, nearest_n_tiles):
     """betti_2 can increase only"""
     tile = np.array(tile_selected)
     v = nearest_voids(tile)
@@ -209,6 +209,7 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
             return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter
 
     # if betti_2 == 0 literally nothing happens
+    filled = 0
     if betti_2 == 1:
         if per == 0:
 
@@ -221,38 +222,57 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
 
             for i in range(num_possible_components):
                 if finished[i] == 1:
-                    total_holes += 1
-                    holes[total_holes] = bfs[i].copy()
-                    for void in bfs[i]:
-                        if void not in holes_voids:
-                            holes_voids += [void]
-                        if void in voids:
-                            voids[void][2] = total_holes
-                        else:
-                            voids[void] = [0, [0, 0, 0, 0, 0, 0], total_holes, 0]
-                    barcode[total_holes] = [1, [time + 1, 0], barcode[num_hole][2] + [total_holes]]
-                    created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i]), total_holes]]
+                    if len(bfs[i]) == 1 and model == 2:
+                        voids[4] = time
+                        filled += 1
+                        n_filled_cubes += 1
+                    else:
+                        total_holes += 1
+                        holes[total_holes] = bfs[i].copy()
+                        for void in bfs[i]:
+                            if void not in holes_voids:
+                                holes_voids += [void]
+                            if void in voids:
+                                voids[void][2] = total_holes
+                            else:
+                                voids[void] = [0, [0, 0, 0, 0, 0, 0], total_holes, 0, 0]
+                        barcode[total_holes] = [1, [time + 1, 0], barcode[num_hole][2] + [total_holes]]
+                        created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i]), total_holes]]
         else:
             for i in range(num_possible_components):
                 if finished[i] == 1:
-                    total_holes += 1
-                    holes[total_holes] = bfs[i].copy()
-                    for void in bfs[i]:
-                        if void not in holes_voids:
-                            holes_voids += [void]
-                        if void in voids:
-                            voids[void][2] = total_holes
-                        else:
-                            voids[void] = [0, [0, 0, 0, 0, 0, 0], total_holes, 0]
+                    """catching cubes of volume 1"""
+                    if len(bfs[i]) == 1 and model == 2:
+                        voids[4] = time
+                        filled += 1
+                        n_filled_cubes += 1
+                    else:
+                        total_holes += 1
+                        holes[total_holes] = bfs[i].copy()
+                        for void in bfs[i]:
+                            if void not in holes_voids:
+                                holes_voids += [void]
+                            if void in voids:
+                                voids[void][2] = total_holes
+                            else:
+                                voids[void] = [0, [0, 0, 0, 0, 0, 0], total_holes, 0]
                         barcode[total_holes] = [0, [time + 1, 0], [total_holes]]
-                    created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i]), total_holes]]
+                        created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i]), total_holes]]
+
+    if betti_2 != 0:
+        if filled > 2:
+            a = 10
+        if filled == 2:
+            betti_2 = -2
+        else:
+            betti_2 -= filled
 
     # change 2d inner perimeter
     if per == 0:  # we are inside a hole:
         inner_perimeter.remove(tile_selected)
         eden[tile_selected][2] = 0
         tile = list(tile_selected)
-        if betti_2 == 0:
+        if betti_2 == 0 and filled == 0:
             hole = holes[num_hole]
             tiles = tiles_from_voids(hole)
             nearest_tiles = shift_for_neighbors(int(tile[3])) + (tile[:3] + [0])
@@ -273,7 +293,7 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                         inner_perimeter.append(x)
                         eden[x][2] = 1
 
-    return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids
+    return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids, n_filled_cubes
 
 def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
     void_selected = bfs[j][iterations]
@@ -580,8 +600,8 @@ def return_vertices(tile, shift):
     vertices = [tuple(x) for x in center+shift]
     return vertices
 
-def euler_characteristic(k0, k1, k2):
-    return k0 - k1 + k2
+def euler_characteristic(k0, k1, k2, k3):
+    return k0 - k1 + k2 - k3
 
 def return_betti_1(betti_2, euler_ch):
     return 1 + betti_2 - euler_ch
@@ -916,15 +936,23 @@ def draw_frequencies_1(dict, folder_name):
     fig.savefig(folder_name+'/fr_b_1.png', format='png', dpi=1200)
     plt.close()
 
-def draw_frequencies_2(dict, folder_name):
+def draw_frequencies_2(dict, changes, folder_name):
     fig, ax = plt.subplots()
     l = len(dict[0])
 
+    ch_2 = [i for i, j in enumerate(changes) if j == -2]
+    y_2 = []
+    for x in ch_2:
+        y_2 += [dict[-2][x+1]]
+
     sh = []
-    for j in np.arange(0, 1):
+    for j in np.arange(-1, 2):
         sh.append(next((i for i, x in enumerate(dict[j]) if x), 0))
     shift = max(sh)
 
+    ax.plot(range(shift, l), dict[-2][shift:], color='tab:purple', label='-2', linewidth=0.75)
+    if next((i for i, x in enumerate(dict[-1]) if x), 0) != 0:
+        ax.plot(range(shift, l), dict[-1][shift:], color='tab:blue', label='-1', linewidth=0.75)
     ax.plot(range(shift, l), dict[0][shift:], color='tab:orange', label='0', linewidth=0.75)
     ax.plot(range(shift, l), dict[1][shift:], color='tab:green', label='+1', linewidth=0.75)
 

@@ -60,7 +60,7 @@ if not file:
             folder_name = str(t)+'_'+dt_string
         os.makedirs(folder_name)
 
-        if model == 0:
+        if model == 0 or model == 2:
             from e_2d_in_3d import num_holes, grow_eden, return_frequencies_1, return_frequencies_2, draw_barcode,\
                 draw_frequencies_1, draw_frequencies_2, draw_diagram_holes, draw_tri_tetra, plot_b_per, draw_eden
 
@@ -69,13 +69,13 @@ if not file:
                 draw_diagram_holes, plot_b_per, num_holes, draw_tri_tetra, draw_barcode, draw_eden
             from e_2d_in_3d_euler import draw_frequencies_2, draw_frequencies_1
 
-        if model == 0 or model == 1:
+        if model == 0 or model == 1 or model == 2:
             print("\nBuilding a model...")
             Betti_1_total_vector, Per_2d, Per_3d, Betti_2_total_vector, Eden,\
                 Process, Created_holes, Holes, Barcode = grow_eden(Time, model=model)
             print("\nCalculating frequencies of Betti_1...")
             freq, changes = return_frequencies_1(Betti_1_total_vector, Time)
-            draw_frequencies_1(freq, changes, folder_name)
+            draw_frequencies_1(freq, folder_name)
             print("\nCalculating frequencies of Betti_2...")
             freq, changes = return_frequencies_2(Betti_2_total_vector, Time)
             draw_frequencies_2(freq, changes, folder_name)
@@ -83,7 +83,7 @@ if not file:
             print("Plotting the frequency of the volume of top dimensional \"holes\"...")
             draw_diagram_holes(Created_holes, Holes, folder_name)
             print("Plotting the growth rates of Betti numbers and the perimeter...")
-            plot_b_per(Betti_1_total_vector, Betti_2_total_vector, Per_2d, Per_3d, Time, 0, folder_name)
+            plot_b_per(Betti_1_total_vector, Betti_2_total_vector, Per_2d, Per_3d, Time, int(Time/3), folder_name)
             print("Plotting the frequency of the number of top dimensional holes for specific shapes with 3 and 4 cells...")
             Tricube, Tricube_f, Tetracube, Tetracube_f = num_holes(Created_holes, Holes)
             draw_tri_tetra(Tricube, Tricube_f, Tetracube, Tetracube_f, folder_name)
