@@ -130,28 +130,6 @@ def grow_eden(t, model):
                 voids[v[1]][3] = t1
             continue
 
-        # new_cubes = edge_voids(tile_selected, shift_edge_voids)
-        # for cube in new_cubes:
-        #     if cube not in cubes_perimeter_edge:
-        #         cubes_perimeter_edge += [cube]
-        #     if cube in voids:
-        #         if voids[cube][0] == 1.:
-        #             cubes_perimeter_edge.remove(cube)
-
-        # # update 3d perimeter
-        # total = len(voids)
-        # inner = len([x for x in voids if voids[x][2] != 0])
-        # outer = len([x for x in voids if voids[x][2] == 0])
-        # perim_3d = np.array([[total], [inner], [outer]])
-        # per_3d = np.c_[per_3d, perim_3d]
-        #
-        # # update 2d perimeter
-        # total = len(perimeter)
-        # inner = len(inner_perimeter)
-        # outer = total - inner
-        # perim_2d = np.array([[total], [inner], [outer]])
-        # per_2d = np.c_[per_2d, perim_2d]
-
         per_2d += [len(perimeter)]
         per_3d += [len(voids)]
 
@@ -212,11 +190,9 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
     filled = 0
     if betti_2 == 1:
         if per == 0:
-
             if barcode[num_hole][0] == 0:
                 tags = tags + [num_hole]
                 barcode[num_hole][0] = 1
-
             holes.pop(num_hole)
             barcode[num_hole][1][1] = time + 1
 
@@ -323,7 +299,8 @@ def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
 
 def return_frequencies_1(vect, time):
     changes = [vect[i+1]-vect[i] for i in range(len(vect)-1)]
-    values = [-3, -2, -1, 0, 1, 2, 3, 4]
+
+    values = [-1, 0, 1, 2]
     freq = {i: [0] for i in values}
 
     for i in tqdm(range(1, time+1), position=0, leave=True):
@@ -334,7 +311,7 @@ def return_frequencies_1(vect, time):
 
 def return_frequencies_2(vect, time):
     changes = [vect[i+1]-vect[i] for i in range(len(vect)-1)]
-    values = [-1, 0, 1, 2, 3, 4]
+    values = [-2, -1, 0, 1]
     freq = {i: [0] for i in values}
 
     for i in tqdm(range(1, time+1), position=0, leave=True):
@@ -799,7 +776,7 @@ def final_inner_2d(holes, perimeter, eden):
     return inn
 
 
-"""DRAWING"""
+"""DRAWING and PLOTTING"""
 def draw_square(x0, y0, z0, d, ax, alpha=1, col='gray', ls=0.47):
     """With center at x, y, z draw a square of area ls^2"""
     """d = 1 if square is parallel to xOy, d = 2 if x0z, d = 3 if y0z"""
@@ -1008,7 +985,7 @@ def draw_diagram_holes(created_holes, holes, folder_name):
     elif len(labels) >= 20:
         plt.setp(ax.get_xticklabels(), fontsize=6)
 
-    ax.legend()
+    ax.legend(loc=1)
     fig.tight_layout()
     fig.savefig(folder_name+'/holes.png', format='png', dpi=1200)
     plt.close()
@@ -1055,7 +1032,7 @@ def plot_b_per(b1, b2, p2, p3, time, N, folder_name):
     plt.plot(xdata_f[n:], ydata_f[n:], 'm-', label=r'$\beta_1(t)$ data',  linewidth=0.75)
     try:
         popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
-    except ValueError:
+    except RuntimeError:
         popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
 
     plt.plot(xdata_f[n:], func(xdata_f[n:], *popt), 'm--', label=r'fit: $y=%5.2f x^{%5.3f}%+5.1f$' % tuple(popt), linewidth=0.75)
@@ -1065,10 +1042,10 @@ def plot_b_per(b1, b2, p2, p3, time, N, folder_name):
     ydata = ydata_f[N:]
     xdata = xdata_f[N:]
     plt.plot(xdata_f[n:], ydata_f[n:], 'b-', label=r'$\beta_2(t)$ data',  linewidth=0.75)
-    # try:
-    popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -5000], [1., 2, 000]))
-    # except:
-    #   popt, pcov = curve_fit(func, xdata, ydata, bounds=([0.,0., -10], [1., 1.5, 10]))
+    try:
+        popt, pcov = curve_fit(func, xdata, ydata)
+    except RuntimeError:
+        popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -5000], [1., 2, 4000]))
     plt.plot(xdata_f[n:], func(xdata_f[n:], *popt), 'b--', label=r'fit: $y=%5.3f x^{%5.3f}%+5.3f$' % tuple(popt),  linewidth=0.75)
 
     # Constrain the optimization to the linear function
@@ -1094,7 +1071,7 @@ def plot_b_per(b1, b2, p2, p3, time, N, folder_name):
 
     plt.xlabel('t')
     plt.ylabel('data')
-    plt.legend(prop={'size': 6})
+    plt.legend(loc=4, prop={'size': 6})
     plt.tight_layout()
     plt.savefig(folder_name+'/per-b-time.png', dpi=1200)
     plt.close()

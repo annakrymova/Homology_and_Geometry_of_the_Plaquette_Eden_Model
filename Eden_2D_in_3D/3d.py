@@ -1,43 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 21 19:34:33 2019
-
-@author: err
-"""
 import random
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import gudhi as gd
 import numpy as np
-
-try:
-    from line_profiler import LineProfiler
-
-    def do_profile(follow=[]):
-        def inner(func):
-            def profiled_func(*args, **kwargs):
-                try:
-                    profiler = LineProfiler()
-                    profiler.add_function(func)
-                    for f in follow:
-                        profiler.add_function(f)
-                    profiler.enable_by_count()
-                    return func(*args, **kwargs)
-                finally:
-                    profiler.print_stats()
-            return profiled_func
-        return inner
-
-except ImportError:
-    def do_profile(follow=[]):
-        "Helpful if you accidentally leave in production!"
-        def inner(func):
-            def nothing(*args, **kwargs):
-                return func(*args, **kwargs)
-            return nothing
-        return inner
-################
 
 
 def hamming2(s1, s2):
