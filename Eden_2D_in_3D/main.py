@@ -26,6 +26,10 @@ model = bool(read_value([0, 1, 2, 3]))
 print('Do you want a picture of your model? (with a large model it can take time)  \n0 -- no \n1 -- yes')
 pic = bool(read_value([0, 1]))
 
+print('Do you want Python or MAYA 3D model? (We wouldn\'t recommend Python for large models (more than 500 tiles)).'
+      ' \n0 -- Python \n1 -- MAYA')
+maya = bool(read_value([0, 1]))
+
 """NO FILE CASE"""
 if not file:
     print('How many tiles would you like in your model?')
@@ -58,46 +62,17 @@ if not file:
 
         if model == 0:
             from e_2d_in_3d import num_holes, grow_eden, return_frequencies_1, return_frequencies_2, draw_barcode,\
-                draw_frequencies_1, draw_frequencies_2, draw_diagram_holes, draw_tri_tetra, plot_b_per
-            print("\nBuilding a model...")
-            Betti_1_total_vector, Per_2d, Per_3d, Betti_2_total_vector, Eden,\
-                Process, Created_holes, Holes, Barcode = grow_eden(Time, model=model)
-
-            print("\nCalculating frequencies of Betti_1...")
-            freq, changes = return_frequencies_1(Betti_1_total_vector, Time)
-            draw_frequencies_1(freq, changes, folder_name)
-            print("\nCalculating frequencies of Betti_2...")
-            freq, changes = return_frequencies_2(Betti_2_total_vector, Time)
-            draw_frequencies_2(freq, changes, folder_name)
-
-            print("Plotting the frequency of the volume of top dimensional \"holes\"...")
-            draw_diagram_holes(Created_holes, Holes, folder_name)
-            print("Plotting the growth rates of Betti numbers and the perimeter...")
-            plot_b_per(Betti_1_total_vector, Betti_2_total_vector, Per_2d[0], Per_3d[0], Time, 0, folder_name)
-            print("Plotting the frequency of the number of top dimensional holes for specific shapes with 3 and 4 cells...")
-            Tricube, Tricube_f, Tetracube, Tetracube_f = num_holes(Created_holes, Holes)
-            draw_tri_tetra(Tricube, Tricube_f, Tetracube, Tetracube_f, folder_name)
-            print("Plotting Betti_2 Barcode...")
-            draw_barcode(Barcode, Time, folder_name)
-
-            if pic:
-                a = 1
-                f = open(folder_name+"/MAYA.txt", "w+")
-                f.write("import maya.cmds as cmds \n"
-                        "Eden = " + str(Process)+"\nt = len(Eden)"
-                        "\nfor i in range(t):"
-                        "\n\tcmds.polyCreateFacet(p = Eden[i])")
-                f.close()
-                print("We created txt file \"MAYA\" for you. Just copy paste its content to MAYA!")
+                draw_frequencies_1, draw_frequencies_2, draw_diagram_holes, draw_tri_tetra, plot_b_per, draw_eden
 
         if model == 1:
             from e_2d_in_3d import return_frequencies_1,  return_frequencies_2, grow_eden,\
-                draw_diagram_holes, plot_b_per, num_holes, draw_tri_tetra, draw_barcode
+                draw_diagram_holes, plot_b_per, num_holes, draw_tri_tetra, draw_barcode, draw_eden
             from e_2d_in_3d_euler import draw_frequencies_2, draw_frequencies_1
+
+        if model == 0 or model == 1:
             print("\nBuilding a model...")
             Betti_1_total_vector, Per_2d, Per_3d, Betti_2_total_vector, Eden,\
-                Process, Created_holes, Holes, Barcode = grow_eden(Time, model=1)
-
+                Process, Created_holes, Holes, Barcode = grow_eden(Time, model=model)
             print("\nCalculating frequencies of Betti_1...")
             freq, changes = return_frequencies_1(Betti_1_total_vector, Time)
             draw_frequencies_1(freq, changes, folder_name)
@@ -108,7 +83,7 @@ if not file:
             print("Plotting the frequency of the volume of top dimensional \"holes\"...")
             draw_diagram_holes(Created_holes, Holes, folder_name)
             print("Plotting the growth rates of Betti numbers and the perimeter...")
-            plot_b_per(Betti_1_total_vector, Betti_2_total_vector, Per_2d[0], Per_3d[0], Time, 0, folder_name)
+            plot_b_per(Betti_1_total_vector, Betti_2_total_vector, Per_2d, Per_3d, Time, 0, folder_name)
             print("Plotting the frequency of the number of top dimensional holes for specific shapes with 3 and 4 cells...")
             Tricube, Tricube_f, Tetracube, Tetracube_f = num_holes(Created_holes, Holes)
             draw_tri_tetra(Tricube, Tricube_f, Tetracube, Tetracube_f, folder_name)

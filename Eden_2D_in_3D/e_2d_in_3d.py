@@ -7,9 +7,171 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import numpy as np
 import collections
-import pandas as pd
 from scipy.optimize import curve_fit
 
+"""GROWING"""
+def grow_eden(t, model):
+    vertices = 4
+    edges = 4
+
+    eden, perimeter = start_eden_2d_in_3d()
+    """perimeter is an array consisting of all tiles that are on the perimeter"""
+    inner_perimeter = []
+    shift_for_vertices = shift_vertices(0), shift_vertices(1), shift_vertices(2)
+    process = [return_vertices((0, 0, 0.5, 2), shift_for_vertices)]
+    """array for MAYA"""
+    perimeter_len = []  # an array consisting of perimeter lengths at every time step
+
+    shift_neighbours = [shift_for_neighbors(0), shift_for_neighbors(1), shift_for_neighbors(2)]
+    shift_diag_neighbours = [shift_for_neighbours_diag(0), shift_for_neighbours_diag(1), shift_for_neighbours_diag(2)]
+
+    v = nearest_voids((0, 0, 0, 2))
+    voids = {v[0]: [0, [0, 0, 0, 0, 1, 0], 0, 0], v[1]: [0, [0, 0, 0, 0, 0, 1], 0, 0]}
+    """dictionary, its items are (x,y,z): [filled, [f0, f1, f2, f3, f4, f5], h, t]
+    where (x,y,z) is a cube's center
+    filled = 1 if all cube's faces are in complex
+    f0 = 1 if the face number 0 in in complex amd so on
+    h = 0 if the void is not in a hole and h = num_hole if the void is in a hole
+    t is a time when the void was filled"""
+
+    """holes is a dictionary containing all VOIDS that create holes"""
+    holes = {}
+    total_holes = 0
+    """barcode is a dictionary, num_hole: [start_time, end_time]"""
+    barcode = {}
+    created_holes = []
+    tags = []
+
+    betti_2_total = 0
+    betti_2_vector_changes = [0]
+    betti_2_total_vector = [0]
+
+    betti_1_total_vector = [0]
+
+    per_2d = [len(perimeter)]
+    per_3d = [len(voids)]
+
+    euler_char_prev = 1
+    holes_voids = []
+
+    skipped = 0
+    size = 1
+
+    pbar = tqdm(total=t)
+    pbar.update(1)
+
+    while size < t:
+        perimeter_len = perimeter_len + [len(perimeter)]
+        x = random.randint(0, len(perimeter) - 1)
+        tile_selected = perimeter[x]
+        process += [return_vertices(tile_selected, shift_for_vertices)]
+        perimeter.pop(x)
+        eden[tile_selected][0] = 1
+
+        v = nearest_voids(tile_selected)
+        c = nearest_cubes(tile_selected)
+        faces = update_void_dict(v, c, eden)
+
+        t0, t1 = 0, 0
+        if int(sum(faces[0]) / 6) == 1:
+            t0 = size
+        if int(sum(faces[1]) / 6) == 1:
+            t1 = size
+        if v[0] not in voids:
+            voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0, t0]
+        else:
+            voids[v[0]][0:2] = [int(sum(faces[0]) / 6), faces[0]]
+            voids[v[0]][3] = t0
+        if v[1] not in voids:
+            voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0, t1]
+        else:
+            voids[v[1]][0:2] = [int(sum(faces[1]) / 6), faces[1]]
+            voids[v[1]][3] = t1
+
+        eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter,
+                                                                                  shift_neighbours)
+        nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
+        vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
+
+        euler_character = euler_characteristic(vertices, edges, size - skipped + 1)
+
+        if (model == 1 and euler_character <= euler_char_prev) or (model == 0):
+            betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids = \
+                increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, size,
+                                  created_holes, tags, inner_perimeter, perimeter, model, holes_voids)
+
+        if euler_character > euler_char_prev and model == 1:
+            skipped += 1
+            perimeter_len.pop()
+            perimeter += [tile_selected]
+            eden[tile_selected][0] = 0
+            del process[-1]
+
+            v = nearest_voids(tile_selected)
+            c = nearest_cubes(tile_selected)
+            faces = update_void_dict(v, c, eden)
+
+            t0, t1 = 0, 0
+            if int(sum(faces[0]) / 6) == 1:
+                t0 = size
+            if int(sum(faces[1]) / 6) == 1:
+                t1 = size
+            if v[0] not in voids:
+                voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0, t0]
+            else:
+                voids[v[0]][0:2] = [int(sum(faces[0]) / 6), faces[0]]
+                voids[v[0]][3] = t0
+            if v[1] not in voids:
+                voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0, t1]
+            else:
+                voids[v[1]][0:2] = [int(sum(faces[1]) / 6), faces[1]]
+                voids[v[1]][3] = t1
+            continue
+
+        # new_cubes = edge_voids(tile_selected, shift_edge_voids)
+        # for cube in new_cubes:
+        #     if cube not in cubes_perimeter_edge:
+        #         cubes_perimeter_edge += [cube]
+        #     if cube in voids:
+        #         if voids[cube][0] == 1.:
+        #             cubes_perimeter_edge.remove(cube)
+
+        # # update 3d perimeter
+        # total = len(voids)
+        # inner = len([x for x in voids if voids[x][2] != 0])
+        # outer = len([x for x in voids if voids[x][2] == 0])
+        # perim_3d = np.array([[total], [inner], [outer]])
+        # per_3d = np.c_[per_3d, perim_3d]
+        #
+        # # update 2d perimeter
+        # total = len(perimeter)
+        # inner = len(inner_perimeter)
+        # outer = total - inner
+        # perim_2d = np.array([[total], [inner], [outer]])
+        # per_2d = np.c_[per_2d, perim_2d]
+
+        per_2d += [len(perimeter)]
+        per_3d += [len(voids)]
+
+        betti_2_vector_changes += [betti_2]
+        betti_2_total += betti_2
+        betti_2_total_vector += [betti_2_total]
+
+        pbar.update(1)
+        euler_char_prev = euler_character
+        size += 1
+
+        # update betti_1
+        betti_1_total = return_betti_1(betti_2_total, euler_character)
+        betti_1_total_vector += [betti_1_total]
+
+    final_barcode = barcode_forest(barcode, tags)
+    final_barcode.sort()
+
+    return betti_1_total_vector, per_2d, per_3d, betti_2_total_vector, eden,\
+           process, created_holes, holes, final_barcode
+
+"""SUPPLEMENTARY FUNCTIONS"""
 def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time, created_holes, tags,
                       inner_perimeter, perimeter, model, holes_voids):  # , nearest_n, nearest_n_tiles):
     # betti_2 = 0
@@ -139,172 +301,6 @@ def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
             break
     return bfs, merged, finished
 
-def grow_eden(t, model):
-    vertices = 4
-    edges = 4
-
-    eden, perimeter = start_eden_2d_in_3d()
-    # perimeter is an array consisting of all tiles that are on the perimeter
-    inner_perimeter = []
-    shift_for_vertices = shift_vertices(0), shift_vertices(1), shift_vertices(2)
-    process = [return_vertices((0, 0, 0.5, 2), shift_for_vertices)]
-    # an array consisting of all tiles that were added (specified by there 4 vertices)
-    # process = 0
-    perimeter_len = []  # an array consisting of perimeter lengths at every time step
-
-    shift_neighbours = [shift_for_neighbors(0), shift_for_neighbors(1), shift_for_neighbors(2)]
-    shift_diag_neighbours = [shift_for_neighbours_diag(0), shift_for_neighbours_diag(1), shift_for_neighbours_diag(2)]
-    # shift_edge_voids = [shift_for_edge_voids(0), shift_for_edge_voids(1), shift_for_edge_voids(2)]
-
-    v = nearest_voids((0, 0, 0, 2))
-    voids = {v[0]: [0, [0, 0, 0, 0, 1, 0], 0, 0], v[1]: [0, [0, 0, 0, 0, 0, 1], 0, 0]}
-    """dictionary, its items are (x,y,z): [filled, [f0, f1, f2, f3, f4, f5], h, t]
-    where (x,y,z) is a cube's center
-    filled = 1 if all cube's faces are in complex
-    f0 = 1 if the face number 0 in in complex amd so on
-    h = 0 if the void is not in a hole and h = num_hole if the void is in a hole
-    t is a time when the void was filled"""
-
-    holes = {}  # dictionary containing all VOIDS that create holes
-    total_holes = 0
-    barcode = {}
-    """dictionary, num_hole: [start_time, end_time]"""
-    created_holes = []
-    # cubes_perimeter_edge = edge_voids((0, 0, 0, 2), shift_edge_voids)
-    tags = []
-
-    betti_2_total = 0
-    betti_2_vector_changes = [0]
-    betti_2_total_vector = [0]
-
-    betti_1_total_vector = [0]
-
-    # per_2d = np.array([[len(perimeter)], [0], [len(perimeter)]])
-    # per_3d = np.array([[len(voids)], [0], [len(voids)]])
-    per_2d = [[len(perimeter)], [0], [len(perimeter)]]
-    per_3d = [[len(voids)], [0], [len(voids)]]
-
-    euler_char_prev = 1
-    holes_voids = []
-
-    skipped = 0
-    size = 1
-
-    pbar = tqdm(total=t)
-    pbar.update(1)
-
-    while size < t:
-        perimeter_len = perimeter_len + [len(perimeter)]
-        x = random.randint(0, len(perimeter) - 1)
-        tile_selected = perimeter[x]
-        process += [return_vertices(tile_selected, shift_for_vertices)]
-        perimeter.pop(x)
-        eden[tile_selected][0] = 1
-
-        v = nearest_voids(tile_selected)
-        c = nearest_cubes(tile_selected)
-        faces = update_void_dict(v, c, eden)
-
-        t0, t1 = 0, 0
-        if int(sum(faces[0]) / 6) == 1:
-            t0 = size
-        if int(sum(faces[1]) / 6) == 1:
-            t1 = size
-        if v[0] not in voids:
-            voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0, t0]
-        else:
-            voids[v[0]][0:2] = [int(sum(faces[0]) / 6), faces[0]]
-            voids[v[0]][3] = t0
-        if v[1] not in voids:
-            voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0, t1]
-        else:
-            voids[v[1]][0:2] = [int(sum(faces[1]) / 6), faces[1]]
-            voids[v[1]][3] = t1
-
-        eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter,
-                                                                                  shift_neighbours)
-        nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
-        vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
-
-        euler_character = euler_characteristic(vertices, edges, size - skipped + 1)
-
-        if (model == 1 and euler_character <= euler_char_prev) or (model != 1):
-            betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids = \
-                increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, size,
-                                  created_holes, tags, inner_perimeter, perimeter, model, holes_voids)
-
-        if euler_character > euler_char_prev and model == 1: # or (betti_2 == 1 and model == 'no_betti_2'):
-            skipped += 1
-            perimeter_len.pop()
-            perimeter += [tile_selected]
-            eden[tile_selected][0] = 0
-            # process.pop(return_vertices(tile_selected, shift_for_vertices))
-            del process[-1]
-
-            v = nearest_voids(tile_selected)
-            c = nearest_cubes(tile_selected)
-            faces = update_void_dict(v, c, eden)
-
-            t0, t1 = 0, 0
-            if int(sum(faces[0]) / 6) == 1:
-                t0 = size
-            if int(sum(faces[1]) / 6) == 1:
-                t1 = size
-            if v[0] not in voids:
-                voids[v[0]] = [int(sum(faces[0]) / 6), faces[0], 0, t0]
-            else:
-                voids[v[0]][0:2] = [int(sum(faces[0]) / 6), faces[0]]
-                voids[v[0]][3] = t0
-            if v[1] not in voids:
-                voids[v[1]] = [int(sum(faces[1]) / 6), faces[1], 0, t1]
-            else:
-                voids[v[1]][0:2] = [int(sum(faces[1]) / 6), faces[1]]
-                voids[v[1]][3] = t1
-            continue
-
-        # new_cubes = edge_voids(tile_selected, shift_edge_voids)
-        # for cube in new_cubes:
-        #     if cube not in cubes_perimeter_edge:
-        #         cubes_perimeter_edge += [cube]
-        #     if cube in voids:
-        #         if voids[cube][0] == 1.:
-        #             cubes_perimeter_edge.remove(cube)
-
-        # # update 3d perimeter
-        # total = len(voids)
-        # inner = len([x for x in voids if voids[x][2] != 0])
-        # outer = len([x for x in voids if voids[x][2] == 0])
-        # perim_3d = np.array([[total], [inner], [outer]])
-        # per_3d = np.c_[per_3d, perim_3d]
-        #
-        # # update 2d perimeter
-        # total = len(perimeter)
-        # inner = len(inner_perimeter)
-        # outer = total - inner
-        # perim_2d = np.array([[total], [inner], [outer]])
-        # per_2d = np.c_[per_2d, perim_2d]
-
-        per_2d[0] += [len(perimeter)]
-        per_3d[0] += [len(voids)]
-
-        betti_2_vector_changes += [betti_2]
-        betti_2_total += betti_2
-        betti_2_total_vector += [betti_2_total]
-
-        pbar.update(1)
-        euler_char_prev = euler_character
-        size += 1
-
-        # update betti_1
-        betti_1_total = return_betti_1(betti_2_total, euler_character)
-        betti_1_total_vector += [betti_1_total]
-
-    final_barcode = barcode_forest(barcode, tags)
-    final_barcode.sort()
-
-    return betti_1_total_vector, per_2d, per_3d, betti_2_total_vector, eden,\
-           process, created_holes, holes, final_barcode
-
 def return_frequencies_1(vect, time):
     changes = [vect[i+1]-vect[i] for i in range(len(vect)-1)]
     values = [-3, -2, -1, 0, 1, 2, 3, 4]
@@ -359,28 +355,6 @@ def start_eden_2d_in_3d():
             (0, -0.5, 0, 1): [0, 1, 0]}
     perimeter = list(eden.keys())
     perimeter.remove((0, 0, 0.5, 2))
-    return eden, perimeter
-
-def start_eden_2d_in_3d_line(length):
-    eden = {(0, 0, 0.5, 2): [1, 0, 0],
-            (1, 0, 0.5, 2): [0, 1, 0],
-            (-1, 0, 0.5, 2): [0, 1, 0],
-            (0, 1, 0.5, 2): [0, 1, 0],
-            (0, -1, 0.5, 2): [0, 1, 0],
-            (0.5, 0, 1, 0): [0, 1, 0],
-            (0, 0.5, 1, 1): [0, 1, 0],
-            (-0.5, 0, 1, 0): [0, 1, 0],
-            (0, -0.5, 1, 1): [0, 1, 0],
-            }
-    perimeter = list(eden.keys())
-    perimeter.remove((0, 0, 0.5, 2))
-
-    shift_neighbours = [shift_for_neighbors(0), shift_for_neighbors(1), shift_for_neighbors(2)]
-    for i in range(length):
-        eden[(i+1, 0, 0.5, 2)] = [1, 0, 0]
-        eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors((i+1, 0, 0.5, 2), eden, perimeter, shift_neighbours)
-        eden[(-(i+1), 0, 0.5, 2)] = [1, 0, 0]
-        eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors((-(i+1), 0, 0.5, 2), eden, perimeter, shift_neighbours)
     return eden, perimeter
 
 def shift_for_neighbors(third_direction):
@@ -806,7 +780,6 @@ def final_inner_2d(holes, perimeter, eden):
 
 
 """DRAWING"""
-
 def draw_square(x0, y0, z0, d, ax, alpha=1, col='gray', ls=0.47):
     """With center at x, y, z draw a square of area ls^2"""
     """d = 1 if square is parallel to xOy, d = 2 if x0z, d = 3 if y0z"""
@@ -896,6 +869,9 @@ def draw_complex(eden, time, tile=None):
     plt.savefig('pictures/eden_' + str(time) + '.png', format='png', dpi=1200)
 
 def draw_barcode(barcode, time, folder_name):
+    if not barcode:
+        print("Model is too small. There is no barcode.")
+        return
     fig = plt.figure()
     plt.style.use('ggplot')
     # plt.axis('off')
@@ -915,33 +891,20 @@ def draw_barcode(barcode, time, folder_name):
     plt.rcParams.update(plt.rcParamsDefault)
     plt.close()
 
-def draw_frequencies_1(dict, changes, folder_name):
+def draw_frequencies_1(dict, folder_name):
     fig = plt.figure()
-    # plt.style.use('classic')
     ax = fig.add_subplot(1, 1, 1)
     l = len(dict[0])
 
-    # ch_4 = [i for i, j in enumerate(changes) if j == 4]
-    # y_4 = []
-    # for x in ch_4:
-    #     y_4 += [dict[4][x+1]]
-
     sh = []
-    for j in np.arange(-2, 3):
+    for j in np.arange(-1, 3):
         sh.append(next((i for i, x in enumerate(dict[j]) if x), 0))
     shift = max(sh)
 
-    shiftt = next((i for i, x in enumerate(dict[-3]) if x), 0)
-    # ax.plot(range(shiftt, l), dict[-3][shiftt:], color='tab:olive', label='-3',  linewidth=0.75)
-    # ax.plot(range(shift, l), dict[-2][shift:], color='black', label='-2',  linewidth=0.75)
     ax.plot(range(shift, l), dict[-1][shift:], color='tab:red', label='-1',  linewidth=0.75)
     ax.plot(range(shift, l), dict[0][shift:], color='tab:orange', label='0',  linewidth=0.75)
     ax.plot(range(shift, l), dict[1][shift:], color='tab:green', label='+1',  linewidth=0.75)
     ax.plot(range(shift, l), dict[2][shift:], color='tab:blue', label='+2',  linewidth=0.75)
-    # shift = next((i for i, x in enumerate(dict[3]) if x), 0)
-    # ax.plot(range(shift, l), dict[3][shift:], color='tab:purple', label='+3',  linewidth=0.75)
-    # if next((i for i, x in enumerate(dict[4]) if x), 0) != 0:
-    #     plt.scatter(ch_4, y_4, s=5, marker='o', color="tab:brown", label='+4')
 
     plt.yscale('log')
     ax.set_ylabel(r'Frequency of Change in $\beta_1$')
@@ -951,28 +914,17 @@ def draw_frequencies_1(dict, changes, folder_name):
     fig.savefig(folder_name+'/fr_b_1.png', format='png', dpi=1200)
     plt.close()
 
-def draw_frequencies_2(dict, changes, folder_name):
+def draw_frequencies_2(dict, folder_name):
     fig, ax = plt.subplots()
     l = len(dict[0])
-
-    # ch_4 = [i for i, j in enumerate(changes) if j == 4]
-    # y_4 = []
-    # for x in ch_4:
-    #     y_4 += [dict[4][x+1]]
 
     sh = []
     for j in np.arange(0, 1):
         sh.append(next((i for i, x in enumerate(dict[j]) if x), 0))
     shift = max(sh)
 
-    # ax.plot(range(shift, l), dict[-1][shift:], color='tab:red', label='-1', linewidth=0.75)
     ax.plot(range(shift, l), dict[0][shift:], color='tab:orange', label='0', linewidth=0.75)
     ax.plot(range(shift, l), dict[1][shift:], color='tab:green', label='+1', linewidth=0.75)
-    # ax.plot(range(shift, l), dict[2][shift:], color='tab:blue', label='+2', linewidth=0.75)
-    # shift = next((i for i, x in enumerate(dict[3]) if x), 0)
-    # ax.plot(range(shift, l), dict[3][shift:], color='tab:purple', label='+3', linewidth=0.75)
-    # if next((i for i, x in enumerate(dict[4]) if x), 0) != 0:
-    #     ax.scatter(ch_4, y_4, s=5, marker='o', color="tab:brown", label='+4')
 
     plt.yscale('log')
     ax.set_ylabel(r'Frequency of Change in $\beta_2$')
