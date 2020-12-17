@@ -91,15 +91,17 @@ if not file:
             draw_barcode(Barcode, Time, folder_name)
 
             if pic:
-                a = 1
-                f = open(folder_name+"/MAYA.txt", "w+")
-                f.write("import maya.cmds as cmds \n"
-                        "Eden = " + str(Process)+"\nt = len(Eden)"
-                        "\nfor i in range(t):"
-                        "\n\tcmds.polyCreateFacet(p = Eden[i])")
-                f.close()
-                print("We created txt file \"MAYA\" for you. Just copy paste its content to MAYA!")
-
+                if maya:
+                    f = open(folder_name+"/MAYA.txt", "w+")
+                    f.write("import maya.cmds as cmds \n"
+                            "Eden = " + str(Process)+"\nt = len(Eden)"
+                            "\nfor i in range(t):"
+                            "\n\tcmds.polyCreateFacet(p = Eden[i])")
+                    f.close()
+                    print("We created txt file \"MAYA\" for you. Just copy paste its content to MAYA!")
+                else:
+                    draw_eden(Eden, folder_name)
+                    print("Python 3D model is created!")
 
 """FILE CASE"""
 # if file:

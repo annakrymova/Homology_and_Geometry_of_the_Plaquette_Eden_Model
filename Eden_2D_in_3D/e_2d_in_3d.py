@@ -821,7 +821,7 @@ def add_box(eden, ax, max_range=5):
     ax.set_ylim(mid_y - max_range, mid_y + max_range)
     ax.set_zlim(mid_z - max_range, mid_z + max_range)
 
-def draw_eden(eden, time):
+def draw_eden(eden, folder_name):
     # ax.grid(True)
     # plt.style.use('ggplot')
     fig = plt.figure()
@@ -838,8 +838,10 @@ def draw_eden(eden, time):
     for x in eden:
         if eden[x][0] == 1:
             draw_square(x[0], x[1], x[2], x[3], ax=ax, col='grey')#'tab:blue')
-    # draw_square(0, 0, 0.5, 2, ax=ax, col='green')
-    plt.savefig('pictures/eden/new/eden_' + str(time) + '.png', format='png', dpi=1200)
+    draw_square(0, 0, 0.5, 2, ax=ax, col='green')
+    plt.show()
+    plt.savefig(folder_name+'/eden.png', format='png', dpi=1200)
+    plt.close()
 
 def draw_complex(eden, time, tile=None):
     # ax.grid(True)
