@@ -60,25 +60,25 @@ if not file:
             folder_name = str(t)+'_'+dt_string
         os.makedirs(folder_name)
 
-        if model == 0 or model == 2:
-            from e_2d_in_3d import num_holes, grow_eden, return_frequencies_1, return_frequencies_2, draw_barcode,\
-                draw_frequencies_1, draw_frequencies_2, draw_diagram_holes, draw_tri_tetra, plot_b_per, draw_eden
-
-        if model == 1:
-            from e_2d_in_3d import return_frequencies_1,  return_frequencies_2, grow_eden,\
-                draw_diagram_holes, plot_b_per, num_holes, draw_tri_tetra, draw_barcode, draw_eden
-            from e_2d_in_3d_euler import draw_frequencies_2, draw_frequencies_1
-
         if model == 0 or model == 1 or model == 2:
+            from e_2d_in_3d import num_holes, grow_eden, return_frequencies_1, return_frequencies_2, draw_barcode,\
+                draw_frequencies_1, draw_frequencies_2, draw_diagram_holes, draw_tri_tetra, plot_b_per, draw_eden,\
+                draw_frequencies_1_eu, draw_frequencies_2_eu
             print("\nBuilding a model...")
             Betti_1_total_vector, Per_2d, Per_3d, Betti_2_total_vector, Eden,\
                 Process, Created_holes, Holes, Barcode = grow_eden(Time, model=model)
             print("\nCalculating frequencies of Betti_1...")
             freq, changes = return_frequencies_1(Betti_1_total_vector, Time)
-            draw_frequencies_1(freq, folder_name)
+            if model == 1:
+                draw_frequencies_1_eu(freq, folder_name)
+            else:
+                draw_frequencies_1(freq, folder_name)
             print("\nCalculating frequencies of Betti_2...")
             freq, changes = return_frequencies_2(Betti_2_total_vector, Time)
-            draw_frequencies_2(freq, changes, folder_name)
+            if model == 1:
+                draw_frequencies_2_eu(freq, folder_name)
+            else:
+                draw_frequencies_2(freq, changes, folder_name)
 
             print("Plotting the frequency of the volume of top dimensional \"holes\"...")
             draw_diagram_holes(Created_holes, Holes, folder_name)
