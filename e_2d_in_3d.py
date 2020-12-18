@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import collections
 from scipy.optimize import curve_fit
+import gudhi as gd
 
 """GROWING"""
 def grow_eden(t, model):
@@ -41,6 +42,7 @@ def grow_eden(t, model):
     """barcode is a dictionary, num_hole: [start_time, end_time]"""
     barcode = {}
     created_holes = []
+    """list of holes that were divided"""
     tags = []
 
     betti_2_total = 0
@@ -146,7 +148,7 @@ def grow_eden(t, model):
         betti_1_total_vector += [betti_1_total]
 
     final_barcode = barcode_forest(barcode, tags)
-    final_barcode.sort()
+    final_barcode.sort(reverse=True)
 
     return betti_1_total_vector, per_2d, per_3d, betti_2_total_vector, eden,\
            process, created_holes, holes, final_barcode
@@ -212,7 +214,7 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                                 voids[void][2] = total_holes
                             else:
                                 voids[void] = [0, [0, 0, 0, 0, 0, 0], total_holes, 0, 0]
-                        barcode[total_holes] = [1, [time + 1, 0], barcode[num_hole][2] + [total_holes]]
+                        barcode[total_holes] = [1, [time + 1, float('inf')], barcode[num_hole][2] + [total_holes]]
                         created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i]), total_holes]]
         else:
             for i in range(num_possible_components):
@@ -232,16 +234,11 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                                 voids[void][2] = total_holes
                             else:
                                 voids[void] = [0, [0, 0, 0, 0, 0, 0], total_holes, 0]
-                        barcode[total_holes] = [0, [time + 1, 0], [total_holes]]
+                        barcode[total_holes] = [0, [time + 1, float('inf')], [total_holes]]
                         created_holes = created_holes + [[barcode[total_holes], bfs[i].copy(), len(bfs[i]), total_holes]]
 
     if betti_2 != 0:
-        if filled > 2:
-            a = 10
-        if filled == 2:
-            betti_2 = -2
-        else:
-            betti_2 -= filled
+        betti_2 -= filled
 
     # change 2d inner perimeter
     if per == 0:  # we are inside a hole:
@@ -311,7 +308,7 @@ def return_frequencies_1(vect, time):
 
 def return_frequencies_2(vect, time):
     changes = [vect[i+1]-vect[i] for i in range(len(vect)-1)]
-    values = [-2, -1, 0, 1]
+    values = [-1, 0, 1]
     freq = {i: [0] for i in values}
 
     for i in tqdm(range(1, time+1), position=0, leave=True):
@@ -615,14 +612,14 @@ def barcode_forest(barcode, tags):
     bars_hole = []
     for x in barcode:
         if barcode[x][0] == 0:
-            bars_pure = bars_pure + [barcode[x][1]]
+            bars_pure += [tuple([2, tuple(barcode[x][1])])]
 
     for x in tags:
         b = {}
         for elem in barcode:
             if barcode[elem][2][0] == x:
                 b[tuple(barcode[elem][2])] = barcode[elem][1]
-        bars_hole = bars_hole + bars_from_tree(b, x)
+        bars_hole += bars_from_tree(b, x)
     return bars_pure + bars_hole
 
 def hamming2(s1, s2):
@@ -658,15 +655,15 @@ def bars_from_tree(b, tag):
                     ind = times.index(0)
                     for i in range(0, len(leaves)):
                         if i != ind:
-                            bars = bars + [b[leaves[i]]]
+                            bars += [tuple([2, tuple(b[leaves[i]])])]
                 else:
                     ind = times.index(max(times))
                     for i in range(0, len(leaves)):
                         if i != ind:
-                            bars = bars + [b[leaves[i]]]
+                            bars = bars + [tuple([2, tuple(b[leaves[i]])])]
                     b[j][1] = max(times)
         n = n - 1
-    bars = bars + [b[(tag,)]]
+    bars += [tuple([2 ,tuple(b[(tag,)])])]
     return bars
 
 def num_holes(created_holes, holes):
@@ -880,7 +877,7 @@ def draw_barcode(barcode, time, folder_name):
     plt.gca().set_aspect('equal', adjustable='box')
     i = 0
     for x in barcode:
-        if x[1] == 0:
+        if x[1] == float('inf'):
             plt.plot([x[0], time], [i, i], 'k-', lw=2)
         else:
             plt.plot([x[0], x[1]], [i, i], 'k-', lw=2)
@@ -888,6 +885,13 @@ def draw_barcode(barcode, time, folder_name):
     fig.suptitle(r'Persistence Barcode $\beta_2$')
     fig.savefig(folder_name+'/barcode.png', format='png', dpi=1200)
     plt.rcParams.update(plt.rcParamsDefault)
+    plt.close()
+
+def draw_barcode_gudhi(barcode, folder_name):
+    fig, ax = plt.subplots()
+    gd.plot_persistence_barcode(persistence=barcode, max_barcodes=1000)
+    ax.set_title(r'Persistence Barcode $\beta_2$')
+    plt.savefig(folder_name+'/barcode_2.png', dpi=1200)
     plt.close()
 
 def draw_frequencies_1(dict, folder_name):
@@ -917,19 +921,18 @@ def draw_frequencies_2(dict, changes, folder_name):
     fig, ax = plt.subplots()
     l = len(dict[0])
 
-    ch_2 = [i for i, j in enumerate(changes) if j == -2]
-    y_2 = []
-    for x in ch_2:
-        y_2 += [dict[-2][x+1]]
+    ch_1 = [i for i, j in enumerate(changes) if j == -1]
+    y_1 = []
+    for x in ch_1:
+        y_1 += [dict[-1][x+1]]
 
     sh = []
     for j in np.arange(-1, 2):
         sh.append(next((i for i, x in enumerate(dict[j]) if x), 0))
     shift = max(sh)
 
-    ax.plot(range(shift, l), dict[-2][shift:], color='tab:purple', label='-2', linewidth=0.75)
     if next((i for i, x in enumerate(dict[-1]) if x), 0) != 0:
-        ax.plot(range(shift, l), dict[-1][shift:], color='tab:blue', label='-1', linewidth=0.75)
+        ax.plot(range(shift, l), dict[-1][shift:], color='tab:purple', label='-1', linewidth=0.75)
     ax.plot(range(shift, l), dict[0][shift:], color='tab:orange', label='0', linewidth=0.75)
     ax.plot(range(shift, l), dict[1][shift:], color='tab:green', label='+1', linewidth=0.75)
 

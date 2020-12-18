@@ -1,6 +1,7 @@
-import numpy as np
 import os
 from datetime import datetime
+import gudhi as gd
+import matplotlib.pyplot as plt
 
 
 def read_value(arr):
@@ -58,12 +59,13 @@ if not file:
         else:
             t = Time
             folder_name = str(t)+'_'+dt_string
+        folder_name = 'experiments/'+folder_name
         os.makedirs(folder_name)
 
         if model == 0 or model == 1 or model == 2:
             from e_2d_in_3d import num_holes, grow_eden, return_frequencies_1, return_frequencies_2, draw_barcode,\
                 draw_frequencies_1, draw_frequencies_2, draw_diagram_holes, draw_tri_tetra, plot_b_per, draw_eden,\
-                draw_frequencies_1_eu, draw_frequencies_2_eu
+                draw_frequencies_1_eu, draw_frequencies_2_eu, draw_barcode_gudhi
             print("\nBuilding a model...")
             Betti_1_total_vector, Per_2d, Per_3d, Betti_2_total_vector, Eden,\
                 Process, Created_holes, Holes, Barcode = grow_eden(Time, model=model)
@@ -88,7 +90,9 @@ if not file:
             Tricube, Tricube_f, Tetracube, Tetracube_f = num_holes(Created_holes, Holes)
             draw_tri_tetra(Tricube, Tricube_f, Tetracube, Tetracube_f, folder_name)
             print("Plotting Betti_2 Barcode...")
-            draw_barcode(Barcode, Time, folder_name)
+            brc = [a[1] for a in Barcode]
+            draw_barcode(brc, Time, folder_name)
+            draw_barcode_gudhi(Barcode, folder_name)
 
             if pic:
                 if maya:
