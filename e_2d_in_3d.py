@@ -998,8 +998,57 @@ def draw_diagram_holes(created_holes, holes, folder_name):
     fr_cr.sort()
     fr_final = [len(holes[i]) for i in holes]
     fr_final.sort()
+    width = 0.35
+
+    def func(x, a, b):
+        return a * x ** b
+
+    def func2(x, a, b):
+        return a - b*x
 
     counter_cr = collections.Counter(fr_cr)
+
+    xdata = list(counter_cr.keys())
+    ydata = list(counter_cr.values())
+
+    try:
+        popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+    except RuntimeError:
+        popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., -10.], [10000., 10.]))
+
+    fig, ax = plt.subplots()
+    # plt.yscale('log')
+
+    xdataplot = np.arange(xdata[0], xdata[-1], 0.1)
+    # print(ydata, list(func(xdataplot, *popt)))
+
+    plt.plot(xdataplot-width/2, list(func(xdataplot, *popt)), color=[0, 94/255, 255/255], label=r'fit: $y=%5.2f x^{%5.3f}$' % tuple(popt), linewidth=0.75)
+    # plt.show()
+
+    # xdata = np.array(xdata)
+    # ydata = np.array(ydata)
+    # log_x_data = np.log(xdata)
+    # log_ydata = np.log(ydata)
+    # fit = np.polyfit(xdata, log_y_data, 1)
+    # print(xdata, log_y_data)
+    # print(fit)
+    # y = np.exp(fit[0]) * np.exp(fit[1]*xdata)
+    # plt.plot(xdata, y,  label=r'fit: $y=%5.2f e^{%5.3fx}$' % tuple(fit), linewidth=0.75)
+
+    # try:
+    #     popt, pcov = curve_fit(func2, xdata, log_ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+    # except RuntimeError:
+    #     popt, pcov = curve_fit(func2, xdata, log_ydata, bounds=([-10., -10.], [10000., 10.]))
+
+    # popt[0] = int(popt[0])
+    # print(popt)
+    # print(type(popt[0]))
+
+
+    # y_plot = np.exp(popt[0]) * np.exp(-popt[1]*xdataplot)
+
+    # plt.plot(xdataplot-width/2, y_plot, color=[1, 0.27, 0.95], label=r'fit: $y=%5.2f e^{-%5.3f*x}$' % tuple([np.exp(popt[0]), popt[1]]), linewidth=0.75)
+
     for j in range(1, list(counter_cr.keys())[-1]):
         if j not in counter_cr:
             counter_cr[j] = 0
@@ -1008,15 +1057,24 @@ def draw_diagram_holes(created_holes, holes, folder_name):
     for i in counter_cr.keys():
         if i not in counter_final:
             counter_final[i] = 0
-    width = 0.35
 
     labels = range(len(counter_cr.keys())+1)
     x = np.arange(len(labels))
 
-    fig, ax = plt.subplots()
-    plt.yscale('log')
     ax.bar(np.array(list(counter_cr.keys())) - width/2, counter_cr.values(), width, color=[(0.44, 0.57, 0.79)], label='Total')
-    ax.bar(np.array(list(counter_final.keys())) + width/2, counter_final.values(), width, color=[(225/256, 151/256, 76/256)], label='Final')
+
+    xdata = list(counter_final.keys())
+    ydata = list(counter_final.values())
+
+    try:
+        popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+    except RuntimeError:
+        popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., -10.], [10000., 10.]))
+
+    xdataplot = np.arange(xdata[0], xdata[-1], 0.1)
+    plt.plot(xdataplot+width/2, list(func(xdataplot, *popt)), color=(225/256, 128/256, 0/256), label=r'fit: $y=%5.2f x^{%5.3f}$' % tuple(popt), linewidth=0.75)
+
+    ax.bar(np.array(list(counter_final.keys())) + width/2, counter_final.values(), width, color=[(225/256, 174/256, 122/256)], label='Final')
 
     ax.set_ylabel('Frequency of Number of Holes')
     ax.set_xlabel('Volume')
