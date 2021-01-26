@@ -19,17 +19,22 @@ print('Welcome to EDEN 2D in 3D Model!')
 
 print('Do you have a file with a model? \n0 -- you want to generate a new model \n1 -- you have a file')
 file = bool(read_value([0, 1]))
+# file = bool(0)
 
 print('Which type of model? \n0 -- standard 2d in 3d growth model \n1 -- euler-characteristic mediated 2d in 3d growth model'
       '\n2 -- filled-in cubes 2d in 3d \n3 -- euler-characteristic mediated 3d growth model')
 model = bool(read_value([0, 1, 2, 3]))
+# model = 0
 
 print('Do you want a picture of your model? (with a large model it can take time)  \n0 -- no \n1 -- yes')
 pic = bool(read_value([0, 1]))
+# pic = bool(0)
 
-print('Do you want Python or MAYA 3D model? (We wouldn\'t recommend Python for large models (more than 500 tiles)).'
-      ' \n0 -- Python \n1 -- MAYA')
-maya = bool(read_value([0, 1]))
+if pic:
+    print('Do you want Python or MAYA 3D model? (We wouldn\'t recommend Python for large models (more than 500 tiles)).'
+          ' \n0 -- Python \n1 -- MAYA')
+    maya = bool(read_value([0, 1]))
+    # maya = bool(0)
 
 """NO FILE CASE"""
 if not file:
@@ -40,6 +45,7 @@ if not file:
             break
         except ValueError:
             print("Oops!  That was no valid number.  Try again...")
+    # Time = 15000
 
     print('How many models would you like to build?')
     while True:
@@ -48,6 +54,7 @@ if not file:
             break
         except ValueError:
             print("Oops!  That was no valid number.  Try again...")
+    # num_models = 1
 
     for q in range(num_models):
         print("WORKING ON MODEL #"+str(q+1))
@@ -72,7 +79,7 @@ if not file:
             print("\nCalculating frequencies of Betti_1...")
             freq, changes = return_frequencies_1(Betti_1_total_vector, Time)
             if model == 1:
-                draw_frequencies_1_eu(freq, folder_name)
+                draw_frequencies_1_eu(freq, changes, folder_name)
             else:
                 draw_frequencies_1(freq, folder_name)
             print("\nCalculating frequencies of Betti_2...")
@@ -106,6 +113,31 @@ if not file:
                 else:
                     draw_eden(Eden, folder_name)
                     print("Python 3D model is created!")
+
+        else:
+            from e_3d import grow_eden, return_frequencies_1, return_frequencies_2, plot_b_per, draw_frequencies_1,\
+                draw_frequencies_2
+            from e_2d_in_3d import draw_diagram_holes, num_holes, draw_tri_tetra, draw_frequencies_2_eu
+            Eden, Perimeter, Betti_2_total_vector, Betti_2_vector_changes, Barcode, Holes, Betti_1_total, \
+                Betti_1_total_vector, Created_holes, Process, Perimeter_len, Skipped, I, Final_barcode = grow_eden(Time, model)
+
+            print("\nCalculating frequencies of Betti_1...")
+            freq, changes = return_frequencies_1(Betti_1_total_vector, Time)
+            draw_frequencies_1(freq, changes, folder_name)
+            print("\nCalculating frequencies of Betti_2...")
+            freq, changes = return_frequencies_2(Betti_2_total_vector, Time)
+            draw_frequencies_2(freq, changes, folder_name)
+            draw_frequencies_2_eu(freq, changes, folder_name)
+
+            if Created_holes and Holes:
+                print("Plotting the frequency of the volume of top dimensional \"holes\"...")
+                draw_diagram_holes(Created_holes, Holes, folder_name)
+            print("Plotting the growth rates of Betti numbers and the perimeter...")
+            plot_b_per(Betti_1_total_vector, Betti_2_total_vector, Perimeter_len, Time, 0, folder_name)
+            print("Plotting the frequency of the number of top dimensional holes for specific shapes with 3 and 4 cells...")
+            Tricube, Tricube_f, Tetracube, Tetracube_f = num_holes(Created_holes, Holes)
+            draw_tri_tetra(Tricube, Tricube_f, Tetracube, Tetracube_f, folder_name)
+            a = 10
 
 """FILE CASE"""
 # if file:
