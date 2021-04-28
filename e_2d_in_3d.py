@@ -18,6 +18,8 @@ def grow_eden(t, model):
     eden, perimeter = start_eden_2d_in_3d()
     """perimeter is an array consisting of all tiles that are on the perimeter"""
     inner_perimeter = []
+    inner_perimeter_3d = []
+
     shift_for_vertices = shift_vertices(0), shift_vertices(1), shift_vertices(2)
 
     process_ripser = [(0, 0, 0.5, 2)]
@@ -54,6 +56,8 @@ def grow_eden(t, model):
 
     per_2d = [len(perimeter)]
     per_3d = [len(voids)]
+    per_2d_in = [0]
+    per_3d_in = [0]
 
     euler_char_prev = 1
     holes_voids = []
@@ -103,8 +107,11 @@ def grow_eden(t, model):
 
         if (model == 1 and euler_character <= euler_char_prev) or model == 0 or model == 2:
             betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids,\
-                n_filled_cubes = increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, size,
-                                                   created_holes, tags, inner_perimeter, perimeter, model, holes_voids, n_filled_cubes)
+                n_filled_cubes, inner_perimeter_3d = increment_betti_2(eden, tile_selected, voids, total_holes,
+                                                                       holes, barcode, size, created_holes, tags,
+                                                                       inner_perimeter, perimeter, model, holes_voids,
+                                                                       n_filled_cubes, inner_perimeter_3d)
+            euler_character = euler_characteristic(vertices, edges, size + 1, n_filled_cubes)
 
         if euler_character > euler_char_prev and model == 1:
             skipped += 1
@@ -137,6 +144,8 @@ def grow_eden(t, model):
 
         per_2d += [len(perimeter)]
         per_3d += [len(voids)]
+        per_2d_in += [len(inner_perimeter)/len(perimeter)]
+        per_3d_in += [len(inner_perimeter_3d)/len(voids)]
 
         betti_2_vector_changes += [betti_2]
         betti_2_total += betti_2
@@ -158,7 +167,7 @@ def grow_eden(t, model):
 
 """SUPPLEMENTARY FUNCTIONS"""
 def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time, created_holes, tags,
-                      inner_perimeter, perimeter, model, holes_voids, n_filled_cubes):  # , nearest_n, nearest_n_tiles):
+                      inner_perimeter, perimeter, model, holes_voids, n_filled_cubes, inner_perimeter_3d):  # , nearest_n, nearest_n_tiles):
     """betti_2 can increase only"""
     tile = np.array(tile_selected)
     v = nearest_voids(tile)
@@ -262,6 +271,10 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
     else:
         if betti_2 == 1:
             hole = holes[total_holes]
+            # update inner 3d perim
+            for x in hole:
+                if x not in inner_perimeter_3d:
+                    inner_perimeter_3d += [x]
             if len(hole) > 1:
                 tiles = tiles_from_voids(hole)
                 for x in tiles:
@@ -269,7 +282,8 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                         inner_perimeter.append(x)
                         eden[x][2] = 1
 
-    return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids, n_filled_cubes
+    return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids,\
+           n_filled_cubes, inner_perimeter_3d
 
 def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
     void_selected = bfs[j][iterations]
@@ -1237,6 +1251,45 @@ def plot_b_per(b1, b2, p2, p3, time, N, folder_name):
     plt.tight_layout()
     plt.savefig(folder_name+'/per-b-time.png', dpi=1200)
     plt.close()
+
+def plot_per_inner(p2, p3, time, folder_name):
+
+    def func(x, a, b):
+        return a * x ** b
+
+    plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+
+    linew = 1
+
+    ydata = p3
+    xdata = range(len(ydata))
+    plt.plot(xdata, ydata, color='forestgreen', linestyle='solid', label=r'inner $P_{3}(t)$ data',  linewidth=linew)
+    # popt, pcov = curve_fit(func, xdata, ydata)
+    # plt.plot(xdata, func(xdata, *popt), color='lightgreen', linestyle='dashed', label=r'fit: $y=%5.4f x^{%5.3f}$' % tuple(popt),  linewidth=linew)
+
+    ydata = p2
+    xdata = range(len(ydata))
+    plt.plot(xdata, ydata, color='mediumorchid', linestyle='solid', label=r'inner $P_{2}(t)$ data',  linewidth=linew)
+    # popt, pcov = curve_fit(func, xdata, ydata)
+    # plt.plot(xdata, func(xdata, *popt), color='mediumorchid', linestyle='dashed', label=r'fit: $y=%5.6f x^{%5.3f}$' % tuple(popt),  linewidth=linew)
+
+    mean_p2 = sum(p2[-int(len(p2)/10):])/len(p2[-int(len(p2)/10):])
+    mean_p3 = sum(p3[-int(len(p3)/10):])/len(p3[-int(len(p3)/20):])
+
+    plt.plot(range(time), [mean_p3]*time, color='forestgreen', linestyle='--', linewidth=0.75)
+    plt.plot(range(time), [mean_p2]*time, color='mediumorchid', linestyle='--', linewidth=0.75)
+
+    plt.xlabel('t')
+    plt.ylabel('Fraction of the Perimeter')
+    plt.legend(loc=4, prop={'size': 6})
+    plt.tight_layout()
+    my_yticks = [mean_p2, mean_p3]
+    my_yticks2 = [round(x, 3) for x in my_yticks]
+    plt.yticks(my_yticks, my_yticks2)
+    plt.savefig(folder_name+'/per-inner.png', dpi=500)
+    plt.savefig(folder_name+'/per-inner.pdf', dpi=500)
+    plt.close()
+
 
 def draw_square_0(x, y, col='gray', alpha=1, ls=0.35):
     """With center at x, y draw a square of area 1"""
