@@ -915,7 +915,8 @@ def draw_eden(eden, folder_name):
             draw_square(x[0], x[1], x[2], x[3], ax=ax, col='grey')#'tab:blue')
     draw_square(0, 0, 0.5, 2, ax=ax, col='green')
     plt.show()
-    plt.savefig(folder_name+'/eden.png', format='png', dpi=1200)
+    plt.savefig(folder_name+'/eden'+str(t)+'.png', format='png', dpi=500)
+    plt.savefig(folder_name+'/eden'+str(t)+'.pdf')
     plt.close()
 
 def draw_complex(eden, time, tile=None):
@@ -943,7 +944,9 @@ def draw_complex(eden, time, tile=None):
         draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=1, col='dimgrey')
     # draw_square(0, 0, 0.5, 2, ax=ax, col='green')
     # draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, col='darkorange')
-    plt.savefig('pictures/eden_' + str(time) + '.png', format='png', dpi=1200)
+    plt.savefig(folder_name+'/eden_' + str(time) + '.png', format='png', dpi=500)
+    plt.savefig(folder_name+'/eden_' + str(time) + '.pdf')
+    plt.show()
 
 def draw_barcode(barcode, time, folder_name):
     if not barcode:
@@ -964,7 +967,8 @@ def draw_barcode(barcode, time, folder_name):
             plt.plot([x[0], x[1]], [i, i], 'k-', lw=2)
         i = i + 40
     fig.suptitle(r'Persistence Barcode $\beta_2$')
-    fig.savefig(folder_name+'/barcode.png', format='png', dpi=1200)
+    fig.savefig(folder_name+'/barcode.png', format='png', dpi=500)
+    fig.savefig(folder_name+'/barcode.pdf', format='pdf', dpi=500)
     plt.rcParams.update(plt.rcParamsDefault)
     plt.close()
 
@@ -995,7 +999,8 @@ def draw_frequencies_1(dict, folder_name):
     ax.set_xlabel('t')
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
     ax.legend(loc=1, prop={'size': 6})
-    fig.savefig(folder_name+'/fr_b_1.png', format='png', dpi=1200)
+    fig.savefig(folder_name+'/fr_b_1.png', format='png', dpi=500)
+    fig.savefig(folder_name+'/fr_b_1.pdf', dpi=500)
     plt.close()
 
 def draw_frequencies_2(dict, changes, folder_name):
@@ -1022,7 +1027,8 @@ def draw_frequencies_2(dict, changes, folder_name):
     ax.set_xlabel('t')
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
     plt.legend(loc=1, prop={'size': 6})
-    fig.savefig(folder_name+'/fr_b_2.png', format='png', dpi=1200)
+    fig.savefig(folder_name+'/fr_b_2.png', format='png', dpi=500)
+    fig.savefig(folder_name+'/fr_b_2.pdf')
     plt.close()
 
 def draw_frequencies_2_eu(dict, changes, folder_name):
@@ -1041,7 +1047,8 @@ def draw_frequencies_2_eu(dict, changes, folder_name):
     ax.set_xlabel('t')
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
     plt.legend(loc=1, prop={'size': 6})
-    fig.savefig(folder_name+'/fr_b_2.png', format='png', dpi=1200)
+    fig.savefig(folder_name+'/fr_b_2.png', format='png', dpi=500)
+    fig.savefig(folder_name+'/fr_b_2.pdf')
     plt.close()
 
 def draw_frequencies_1_eu(dict, changes, folder_name):
@@ -1071,7 +1078,8 @@ def draw_frequencies_1_eu(dict, changes, folder_name):
     ax.set_xlabel('t')
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
     ax.legend(loc=1, prop={'size': 6})
-    fig.savefig(folder_name+'/fr_b_1.png', format='png', dpi=1200)
+    fig.savefig(folder_name+'/fr_b_1.png', format='png', dpi=500)
+    fig.savefig(folder_name+'/fr_b_1.pdf')
     plt.close()
 
 def draw_diagram_holes(created_holes, holes, folder_name):
@@ -1178,7 +1186,9 @@ def draw_diagram_holes(created_holes, holes, folder_name):
 
     ax.legend(loc=1)
     fig.tight_layout()
-    fig.savefig(folder_name+'/holes.png', format='png', dpi=1200)
+    fig.savefig(folder_name+'/holes.png', format='png', dpi=500)
+    fig.savefig(folder_name+'/holes.pdf')
+    # plt.show()
     plt.close()
 
 def draw_tri_tetra(tri, tri_f, tetra, tetra_f, folder_name):
@@ -1200,7 +1210,8 @@ def draw_tri_tetra(tri, tri_f, tetra, tetra_f, folder_name):
         ax.set_xticklabels(labels)
         ax.legend()
         fig.tight_layout()
-        fig.savefig(folder_name+'/tri-tetra-cubes.png', format='png', dpi=1200)
+        fig.savefig(folder_name+'/tri-tetra-cubes.png', format='png', dpi=500)
+        fig.savefig(folder_name+'/tri-tetra-cubes.pdf')
         plt.close()
     except ValueError:
         print("No tricubes and tetracubes in this complex")
@@ -1264,7 +1275,8 @@ def plot_b_per(b1, b2, p2, p3, time, N, folder_name):
     plt.ylabel('data')
     plt.legend(loc=4, prop={'size': 6})
     plt.tight_layout()
-    plt.savefig(folder_name+'/per-b-time.png', dpi=1200)
+    plt.savefig(folder_name+'/per-b-time.png', dpi=400)
+    plt.savefig(folder_name+'/per-b-time.pdf', dpi=400)
     plt.close()
 
 def plot_per_inner(p2, p3, time, folder_name):
