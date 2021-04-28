@@ -1,4 +1,3 @@
-import numpy as np
 import sys
 from tqdm import tqdm
 import random
@@ -25,6 +24,7 @@ def grow_eden(t, model):
 
     process_ripser = [(0, 0, 0.5, 2)]
     """array for MAYA"""
+    process = [return_vertices((0, 0, 0.5, 2), shift_for_vertices)]
     perimeter_len = []  # an array consisting of perimeter lengths at every time step
 
     shift_neighbours = [shift_for_neighbors(0), shift_for_neighbors(1), shift_for_neighbors(2)]
@@ -67,7 +67,7 @@ def grow_eden(t, model):
     n_filled_cubes = 0
     size = 1
 
-    pbar = tqdm(total=t)
+    pbar = tqdm(total=t, position=0, leave=True)
     pbar.update(1)
 
     while size < t:
