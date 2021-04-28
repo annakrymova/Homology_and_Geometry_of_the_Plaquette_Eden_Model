@@ -1298,4 +1298,16 @@ def draw_square_0(x, y, col='gray', alpha=1, ls=0.35):
     # plt.grid(True)
     plt.fill([x - ls, x + ls, x + ls, x - ls], [y - ls, y - ls, y + ls, y + ls], alpha=alpha, color=col)
 
+def read_barcode_b1_from_file(folder_name):
+    file1 = open(folder_name+'/barcode1.txt', 'r')
+    Lines = file1.readlines()
+    Barcode_b1 = []
+    for interval in Lines:
+        ends = re.findall(r"[\w']+", interval)
+        ends = [int(x) for x in ends]
+        if len(ends) == 1:
+            Barcode_b1 += [(1, tuple([ends[0], float('inf')]))]
+        else:
+            Barcode_b1 += [(1,tuple([ends[0], ends[1]]))]
+    return Barcode_b1
 
