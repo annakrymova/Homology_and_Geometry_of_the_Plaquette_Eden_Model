@@ -63,8 +63,6 @@ def grow_eden(t, model):
     euler_char_prev = 1
     holes_voids = []
 
-    blocked = []
-
     skipped = 0
     n_filled_cubes = 0
     size = 1
@@ -356,15 +354,6 @@ def create_dist_matrix(Time, eden, num_vert, folder_name):
                 matrix[e[0], e[1]] = t+1
     matrix = np.tril(matrix, -1)
     np.savetxt(folder_name+'/dist_matrix'+str(Time)+'.txt', matrix, fmt='%1.0f', delimiter=',')
-
-    # print("\nWriting matrix to a file")
-    # pbar = tqdm(total=num_vert)
-    # f = open("file.txt", "w+")
-    # for i, line in enumerate(matrix):
-    #     pbar.update(1)
-    #     np.savetxt(f, line[:i], fmt='%1.0f', newline=",")
-    #     f.write("\n")
-    # f.close()
     return matrix
 
 
@@ -468,14 +457,6 @@ def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors):
         # if n[2] <= 0:
         #     continue
         if n in eden:
-            # if n in perimeter:
-            #     holes_voids = [v for v in voids if voids[v][2] != 0]
-            #     v = nearest_voids(n)
-            #     if v[0] in holes_voids and v[1] in holes_voids:
-            #         z = 1
-            #     else:
-            #         z = 0
-            #     eden[n][2] = z
             eden[n][1] += 1
             if eden[n][0] == 1:
                 if diff_nearest_tiles[i][directions[1]] > 0:
@@ -490,13 +471,6 @@ def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors):
             eden[n] = [0, 1, 0]
             perimeter = perimeter + [n]
             new[i] = 1
-            # holes_voids = [v for v in voids if voids[v][2] != 0]
-            # v = nearest_voids(n)
-            # if v[0] in holes_voids:
-            #     z = 1
-            # else:
-            #     z = 0
-            # eden[n] = [0, 1, z]
     return eden, perimeter, nearest_n, nearest_tiles, new
 
 def shift_for_neighbours_diag(third_direction):
@@ -716,10 +690,7 @@ def bars_from_tree(b, tag):
     bars = []
     while n > 0:
         leaves_parent = [x for x in b if len(x) == n - 1]
-
-        # print(leaves_parent)
         possible_leaves = [x for x in b if len(x) == n]
-        # print(possible_leaves)
         for j in leaves_parent:
             leaves = []
             for x in possible_leaves:
@@ -729,8 +700,6 @@ def bars_from_tree(b, tag):
                 root = tuple(root)
                 if hamming2(j, root) == 0:
                     leaves = leaves + [x]
-            # diff(possible_leaves, leaves)
-            # print(leaves)
             if len(leaves) > 0:
                 times = []
                 for x in leaves:
@@ -747,7 +716,7 @@ def bars_from_tree(b, tag):
                             bars = bars + [tuple([2, tuple(b[leaves[i]])])]
                     b[j][1] = max(times)
         n = n - 1
-    bars += [tuple([2 ,tuple(b[(tag,)])])]
+    bars += [tuple([2, tuple(b[(tag,)])])]
     return bars
 
 def num_holes(created_holes, holes):
@@ -800,7 +769,7 @@ def num_holes(created_holes, holes):
         tetracube[typ] += 1
     for x in final_4:
         dist = distances(x)
-        if dist == [2,2,3]:
+        if dist == [2, 2, 3]:
             typ = 'I'
         elif dist == [1.4, 2, 2.2]:
             typ = 'L'
@@ -899,9 +868,7 @@ def add_box(eden, ax, max_range=5):
     ax.set_ylim(mid_y - max_range, mid_y + max_range)
     ax.set_zlim(mid_z - max_range, mid_z + max_range)
 
-def draw_eden(eden, folder_name, t, tile = None):
-    # ax.grid(True)
-    # plt.style.use('ggplot')
+def draw_eden(eden, folder_name, t, tile=None):
     fig = plt.figure()
     ax = plt.axes(projection='3d')
     ax.axis('off')
@@ -918,15 +885,10 @@ def draw_eden(eden, folder_name, t, tile = None):
             draw_square(x[0], x[1], x[2], x[3], ax=ax, col='#0077df')#'tab:blue')
         else:
             draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.4, col='grey')
-    # draw_square(0, 0, 0.5, 2, ax=ax, col='green')
+    draw_square(0, 0, 0.5, 2, ax=ax, col='green')
     if tile is not None:
         draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, col='orange')
 
-    # y = np.linspace(-0.5, 0.5, 10)
-    # x = [0.5]*len(y)
-    # z = [0.5]*len(y)
-    # ax.plot(x, y, z, color='m', linewidth=5)
-    plt.show()
     plt.savefig(folder_name+'/eden'+str(t)+'.png', format='png', dpi=500)
     plt.savefig(folder_name+'/eden'+str(t)+'.pdf')
     plt.close()
@@ -1138,9 +1100,6 @@ def draw_diagram_holes(created_holes, holes, folder_name):
     def func(x, a, b):
         return a * x ** b
 
-    def func2(x, a, b):
-        return a - b*x
-
     counter_cr = collections.Counter(fr_cr)
 
     xdata = list(counter_cr.keys())
@@ -1234,7 +1193,6 @@ def draw_diagram_holes(created_holes, holes, folder_name):
     fig.tight_layout()
     fig.savefig(folder_name+'/holes.png', format='png', dpi=500)
     fig.savefig(folder_name+'/holes.pdf')
-    # plt.show()
     plt.close()
 
 def draw_tri_tetra(tri, tri_f, tetra, tetra_f, folder_name):
