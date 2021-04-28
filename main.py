@@ -70,24 +70,138 @@ if not file:
         os.makedirs(folder_name)
 
         if model == 0 or model == 1 or model == 2:
-            from e_2d_in_3d import num_holes, grow_eden, return_frequencies_1, return_frequencies_2, draw_barcode,\
-                draw_frequencies_1, draw_frequencies_2, draw_diagram_holes, draw_tri_tetra, plot_b_per, draw_eden,\
-                draw_frequencies_1_eu, draw_frequencies_2_eu, draw_barcode_gudhi
-            print("\nBuilding a model...")
-            Betti_1_total_vector, Per_2d, Per_3d, Betti_2_total_vector, Eden,\
-                Process, Created_holes, Holes, Barcode = grow_eden(Time, model=model)
-            print("\nCalculating frequencies of Betti_1...")
-            freq, changes = return_frequencies_1(Betti_1_total_vector, Time)
-            if model == 1:
-                draw_frequencies_1_eu(freq, changes, folder_name)
-            else:
-                draw_frequencies_1(freq, folder_name)
-            print("\nCalculating frequencies of Betti_2...")
-            freq, changes = return_frequencies_2(Betti_2_total_vector, Time)
-            if model == 1:
-                draw_frequencies_2_eu(freq, folder_name)
-            else:
-                draw_frequencies_2(freq, changes, folder_name)
+            from e_2d_in_3d import num_holes, grow_eden, return_frequencies_1, return_frequencies_2, draw_barcode, \
+                draw_frequencies_1, draw_frequencies_2, draw_diagram_holes, draw_tri_tetra, plot_b_per, draw_eden, \
+                draw_frequencies_1_eu, draw_frequencies_2_eu, draw_barcode_gudhi, create_dist_matrix, plot_per_inner,\
+                neighbours_diag, read_barcode_b1_from_file
+
+            """BARCODE FOR B1"""
+            # folder_name = '.'
+            # Barcode_b1 = read_barcode_b1_from_file(folder_name)
+            # Barcode_b1 = [a for a in Barcode_b1 if a[1][1] - a[1][0] != float('inf')]
+            # draw_barcode_gudhi(Barcode_b1, folder_name, 1)
+
+            print("Building a model...")
+            # profile = cProfile.Profile()
+            # profile.runcall(grow_eden, Time, model, folder_name)
+            # ps = pstats.Stats(profile)
+            # ps.sort_stats('calls', 'cumtime')
+            # ps.print_stats()
+
+            # lp = LineProfiler()
+            # lp.add_function(neighbours_diag)
+            # lp_wrapper = lp(grow_eden)
+            # lp_wrapper(Time, model, folder_name)
+            # lp.print_stats()
+
+            Betti_1_total_vector, Per_2d, Per_3d, Betti_2_total_vector, Eden, Process, Created_holes, Holes, Barcode, \
+                Vertices, Process_ripser, Inner_perimeter, Voids, Per_2d_in, Per_3d_in = grow_eden(Time, model, folder_name)
+
+            def plot_per_inner2(p2, p3, time, folder_name):
+                def func(x, a, b):
+                    return a * x ** b
+
+                plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+
+                linew = 1
+
+                ydata = p3
+                xdata = range(len(ydata))
+                plt.plot(xdata, ydata, color='forestgreen', linestyle='solid', label=r'inner $P_{3}(t)$ data',  linewidth=linew)
+                # popt, pcov = curve_fit(func, xdata, ydata)
+                # plt.plot(xdata, func(xdata, *popt), color='lightgreen', linestyle='dashed', label=r'fit: $y=%5.4f x^{%5.3f}$' % tuple(popt),  linewidth=linew)
+
+                ydata = p2
+                xdata = range(len(ydata))
+                plt.plot(xdata, ydata, color='mediumorchid', linestyle='solid', label=r'inner $P_{2}(t)$ data',  linewidth=linew)
+                # popt, pcov = curve_fit(func, xdata, ydata)
+                # plt.plot(xdata, func(xdata, *popt), color='mediumorchid', linestyle='dashed', label=r'fit: $y=%5.6f x^{%5.3f}$' % tuple(popt),  linewidth=linew)
+                part = 30
+                mean_p2 = sum(p2[-int(len(p2)/part):])/len(p2[-int(len(p2)/part):])
+                mean_p3 = sum(p3[-int(len(p3)/part):])/len(p3[-int(len(p3)/part):])
+
+                plt.plot(range(time), [mean_p3]*time, color='forestgreen', linestyle='--', linewidth=0.75)
+                plt.plot(range(time), [mean_p2]*time, color='mediumorchid', linestyle='--', linewidth=0.75)
+
+                plt.xlabel('t')
+                plt.ylabel('Fraction of the Perimeter')
+                plt.legend(loc=4, prop={'size': 6})
+                # plt.tight_layout()
+                my_yticks = [mean_p2, mean_p3]
+                my_yticks2 = [round(x, 3) for x in my_yticks]
+                plt.yticks(my_yticks, my_yticks2)
+                plt.savefig(folder_name+'/per-inner.png', dpi=500)
+                plt.savefig(folder_name+'/per-inner.pdf', dpi=500)
+                plt.close()
+            plot_per_inner2(Per_2d_in, Per_3d_in, Time, folder_name)
+
+            """DF b1 b2 per2 per3"""
+            cols = ['b1', 'b2', 'p2', 'p3']
+            df_all = pd.DataFrame(columns=cols)
+            df_all['b1'] = Betti_1_total_vector
+            df_all['b2'] = Betti_1_total_vector
+            df_all['p2'] = Per_2d
+            df_all['p3'] = Per_3d
+            df_all.to_csv(r'CSV_filled_in/df_all_' + str(Time) + '.csv', mode='a+', header=True)
+
+            # """read b1"""
+            # df = pd.read_csv('df_freq_b1_500000.csv')
+            # freq = dict()
+            # freq[-1] = df['-1'].tolist()
+            # freq[0] = df['0'].tolist()
+            # freq[1] = df['1'].tolist()
+            # freq[2] = df['2'].tolist()
+            # draw_frequencies_1(freq, folder_name)
+            # """read b2"""
+            # df = pd.read_csv('df_freq_b2_500000.csv')
+            # freq = dict()
+            # freq[-1] = df['-1'].tolist()
+            # freq[0] = df['0'].tolist()
+            # freq[1] = df['1'].tolist()
+            # freq[2] = df['2'].tolist()
+            # draw_frequencies_1(freq, folder_name)
+            # Betti_2_total_vector = df['b2'].tolist()
+            # p2d = df['p2'].tolist()
+            # p3d = df['p3'].tolist()
+            # df = df.append(dict(zip(cols, per)), ignore_index=True)
+
+            # draw_eden(Eden, folder_name, Time)
+            plot_per_inner(Per_2d_in, Per_3d_in, Time, folder_name)
+            #
+            # """PERIMETER STATISTICS"""
+            # per = [Per_2d[-1], len(Inner_perimeter) / Per_2d[-1], (Per_2d[-1] - len(Inner_perimeter)) / Per_2d[-1],
+            #        Per_3d[-1], len([x for x in Voids if Voids[x][2] != 0]) / Per_3d[-1],
+            #        len([x for x in Voids if Voids[x][2] == 0]) / Per_3d[-1]]
+            #
+            # df = df.append(dict(zip(cols, per)), ignore_index=True)
+
+            create_dist_matrix(Time, Process_ripser, Vertices, folder_name)
+            # print(Process)
+            # freq, changes = return_frequencies_1(Betti_1_total_vector, Time)
+            # if model == 1:
+            #     draw_frequencies_1_eu(freq, changes, folder_name)
+            # else:
+            #     draw_frequencies_1(freq, folder_name)
+            #
+            # """DF freq b1 """
+            # cols = list(freq.keys())
+            # df = pd.DataFrame(columns=cols)
+            # for col in cols:
+            #     df[col] = freq[col]
+            # df.to_csv(folder_name+r'/df_freq_b1_' + str(Time) + '.csv', mode='w+', header=True)
+            #
+            # freq, changes = return_frequencies_2(Betti_2_total_vector, Time)
+            # if model == 1:
+            #     draw_frequencies_2_eu(freq, changes, folder_name)
+            # else:
+            #     draw_frequencies_2(freq, changes, folder_name)
+            #
+            # """DF freq b2"""
+            # cols = list(freq.keys())
+            # df = pd.DataFrame(columns=cols)
+            # for col in cols:
+            #     df[col] = freq[col]
+            # df.to_csv(folder_name+r'/df_freq_b2_' + str(Time) + '.csv', mode='w+', header=True)
 
             print("Plotting the frequency of the volume of top dimensional \"holes\"...")
             draw_diagram_holes(Created_holes, Holes, folder_name)
