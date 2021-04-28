@@ -987,17 +987,33 @@ def draw_frequencies_1(dict, folder_name):
     sh = []
     for j in np.arange(-1, 3):
         sh.append(next((i for i, x in enumerate(dict[j]) if x), 0))
-    shift = max(sh)
+    shift = max(sh)*8
+    mean_values = {x: sum(dict[x][(-int(len(dict[x])/10)):]) / len(dict[x][(-int(len(dict[x])/10)):]) for x in range(-1, 3)}
 
-    ax.plot(range(shift, l), dict[-1][shift:], color='tab:red', label='-1',  linewidth=0.75)
-    ax.plot(range(shift, l), dict[0][shift:], color='tab:orange', label='0',  linewidth=0.75)
-    ax.plot(range(shift, l), dict[1][shift:], color='tab:green', label='+1',  linewidth=0.75)
-    ax.plot(range(shift, l), dict[2][shift:], color='tab:blue', label='+2',  linewidth=0.75)
+    linew = 1
+    ax.plot(range(shift, l), dict[-1][shift:], color='tab:red', label='-1',  linewidth=linew)
+    ax.plot(range(shift, l), dict[0][shift:], color='tab:orange', label='0',  linewidth=linew)
+    ax.plot(range(shift, l), dict[1][shift:], color='tab:green', label='+1',  linewidth=linew)
+    ax.plot(range(shift, l), dict[2][shift:], color='tab:blue', label='+2',  linewidth=linew)
+
+    ax.plot(range(shift, l), [mean_values[-1]]*len(range(shift, l)), color='tab:red', linestyle='--', linewidth=linew)
+    ax.plot(range(shift, l), [mean_values[0]]*len(range(shift, l)), color='tab:orange', linestyle='--', linewidth=linew)
+    ax.plot(range(shift, l), [mean_values[1]]*len(range(shift, l)), color='tab:green', linestyle='--', linewidth=linew)
+    ax.plot(range(shift, l), [mean_values[2]]*len(range(shift, l)), color='tab:blue', linestyle='--', linewidth=linew)
 
     plt.yscale('log')
     ax.set_ylabel(r'Frequency of Change in $\beta_1$')
     ax.set_xlabel('t')
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+    my_yticks = list(mean_values.values())
+    my_yticks2 = [round(x, 3) for x in my_yticks]
+    my_yticks[0] += 0.005
+    my_yticks[2] -= 0.005
+    # plt.yticks([0.01]+my_yticks, [r'$10^{-2}$']+my_yticks2)
+    plt.yticks(my_yticks, my_yticks2)
+    # plt.rcParams.update({'font.size': 6})
+    ax.tick_params(axis='y', which='major', labelsize=7)
+    ax.tick_params(axis='y', which='minor', labelsize=7)
     ax.legend(loc=1, prop={'size': 6})
     fig.savefig(folder_name+'/fr_b_1.png', format='png', dpi=500)
     fig.savefig(folder_name+'/fr_b_1.pdf', dpi=500)
@@ -1016,16 +1032,25 @@ def draw_frequencies_2(dict, changes, folder_name):
     for j in np.arange(-1, 2):
         sh.append(next((i for i, x in enumerate(dict[j]) if x), 0))
     shift = max(sh)
+    mean_values = {x: sum(dict[x][(-int(len(dict[x])/10)):]) / len(dict[x][(-int(len(dict[x])/10)):]) for x in range(0, 2)}
 
     if next((i for i, x in enumerate(dict[-1]) if x), 0) != 0:
-        ax.plot(range(shift, l), dict[-1][shift:], color='tab:purple', label='-1', linewidth=0.75)
+        mean_values = {x: sum(dict[x][(-int(len(dict[x])/10)):]) / len(dict[x][(-int(len(dict[x])/10)):]) for x in range(-1, 2)}
+        ax.plot(range(shift, l), dict[-1][shift:], color='tab:red', label='-1', linewidth=0.75)
+        ax.plot(range(shift, l), [mean_values[-1]]*len(range(shift, l)), color='tab:red', linestyle='--', linewidth=0.75)
     ax.plot(range(shift, l), dict[0][shift:], color='tab:orange', label='0', linewidth=0.75)
     ax.plot(range(shift, l), dict[1][shift:], color='tab:green', label='+1', linewidth=0.75)
+
+    ax.plot(range(shift, l), [mean_values[0]]*len(range(shift, l)), color='tab:orange', linestyle='--', linewidth=0.75)
+    ax.plot(range(shift, l), [mean_values[1]]*len(range(shift, l)), color='tab:green', linestyle='--', linewidth=0.75)
 
     plt.yscale('log')
     ax.set_ylabel(r'Frequency of Change in $\beta_2$')
     ax.set_xlabel('t')
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+    my_yticks = list(mean_values.values())
+    my_yticks2 = [round(x, 3) for x in my_yticks]
+    plt.yticks(my_yticks, my_yticks2)
     plt.legend(loc=1, prop={'size': 6})
     fig.savefig(folder_name+'/fr_b_2.png', format='png', dpi=500)
     fig.savefig(folder_name+'/fr_b_2.pdf')
