@@ -9,6 +9,7 @@ import numpy as np
 import collections
 from scipy.optimize import curve_fit
 import gudhi as gd
+import re
 
 """GROWING"""
 def grow_eden(t, model):
