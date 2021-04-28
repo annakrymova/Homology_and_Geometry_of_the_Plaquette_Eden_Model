@@ -31,7 +31,7 @@ def grow_eden(t, model):
     shift_diag_neighbours = [shift_for_neighbours_diag(0), shift_for_neighbours_diag(1), shift_for_neighbours_diag(2)]
 
     v = nearest_voids((0, 0, 0, 2))
-    voids = {v[0]: [0, [0, 0, 0, 0, 1, 0], 0, 0], v[1]: [0, [0, 0, 0, 0, 0, 1], 0, 0, 0]}
+    voids = {v[0]: [0, [0, 0, 0, 0, 1, 0], 0, 0, 0], v[1]: [0, [0, 0, 0, 0, 0, 1], 0, 0, 0]}
     """dictionary, its items are (x,y,z): [filled, [f0, f1, f2, f3, f4, f5], h, t, v]
     where (x,y,z) is a cube's center
     filled = 1 if all cube's faces are in complex
@@ -106,7 +106,7 @@ def grow_eden(t, model):
         nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
         vertices, edges, v_new, e_new = actualize_vef(vertices, edges, nearest_n, nearest_diag)
 
-        euler_character = euler_characteristic(vertices, edges, size - skipped + 1, n_filled_cubes)
+        euler_character = euler_characteristic(vertices, edges, size + 1, n_filled_cubes)
 
         if (model == 1 and euler_character <= euler_char_prev) or model == 0 or model == 2:
             betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids,\
@@ -226,7 +226,8 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
             for i in range(num_possible_components):
                 if finished[i] == 1:
                     if len(bfs[i]) == 1 and model == 2:
-                        voids[4] = time
+                        if bfs[i][0] in voids and len(voids[bfs[i][0]]) >= 5:
+                            voids[bfs[i][0]][4] = time
                         filled += 1
                         n_filled_cubes += 1
                     else:
@@ -246,7 +247,7 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
                 if finished[i] == 1:
                     """catching cubes of volume 1"""
                     if len(bfs[i]) == 1 and model == 2:
-                        voids[4] = time
+                        voids[bfs[i][0]][4] = time
                         filled += 1
                         n_filled_cubes += 1
                     else:
