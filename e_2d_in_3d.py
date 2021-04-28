@@ -62,6 +62,8 @@ def grow_eden(t, model):
     euler_char_prev = 1
     holes_voids = []
 
+    blocked = []
+
     skipped = 0
     n_filled_cubes = 0
     size = 1
@@ -98,10 +100,10 @@ def grow_eden(t, model):
             voids[v[1]][0:2] = [int(sum(faces[1]) / 6), faces[1]]
             voids[v[1]][3] = t1
 
-        eden, perimeter, nearest_n, nearest_neighbour_tiles = actualize_neighbors(tile_selected, eden, perimeter,
+        eden, perimeter, nearest_n, nearest_neighbour_tiles, new = actualize_neighbors(tile_selected, eden, perimeter,
                                                                                   shift_neighbours)
         nearest_diag, nearest_diag_tiles = neighbours_diag(tile_selected, eden, shift_diag_neighbours)
-        vertices, edges = actualize_vef(vertices, edges, nearest_n, nearest_diag)
+        vertices, edges, v_new, e_new = actualize_vef(vertices, edges, nearest_n, nearest_diag)
 
         euler_character = euler_characteristic(vertices, edges, size - skipped + 1, n_filled_cubes)
 
@@ -118,7 +120,17 @@ def grow_eden(t, model):
             perimeter_len.pop()
             perimeter += [tile_selected]
             eden[tile_selected][0] = 0
+
+            for i, tile in enumerate(nearest_neighbour_tiles):
+                eden[tile][1] -= 1
+
+            for i, tile in enumerate(nearest_neighbour_tiles):
+                if new[i] == 1:
+                    perimeter.remove(tile)
+
             del process[-1]
+            vertices = vertices - v_new
+            edges = edges - e_new
 
             v = nearest_voids(tile_selected)
             c = nearest_cubes(tile_selected)
@@ -447,6 +459,7 @@ def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors):
         n[3] = dimension(n[:3])
     nearest_tiles = [tuple(n) for n in nearest_tiles]
     nearest_n = [0]*4
+    new = [0]*12
     for i, n in enumerate(nearest_tiles):
         # if n[2] <= 0:
         #     continue
@@ -472,6 +485,7 @@ def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors):
         else:
             eden[n] = [0, 1, 0]
             perimeter = perimeter + [n]
+            new[i] = 1
             # holes_voids = [v for v in voids if voids[v][2] != 0]
             # v = nearest_voids(n)
             # if v[0] in holes_voids:
@@ -479,7 +493,7 @@ def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors):
             # else:
             #     z = 0
             # eden[n] = [0, 1, z]
-    return eden, perimeter, nearest_n, nearest_tiles
+    return eden, perimeter, nearest_n, nearest_tiles, new
 
 def shift_for_neighbours_diag(third_direction):
     directions = [0, 1, 2]
@@ -553,7 +567,7 @@ def actualize_vef(vertices, edges, nearest_n, nearest_diag):
     vertices = vertices + sum(v)
     edges = edges + sum(e)
 
-    return vertices, edges
+    return vertices, edges, sum(v), sum(e)
 
 def nearest_voids(tile):
     diff = np.array([[0, 0, 0]] * 2).astype(float)
