@@ -986,11 +986,16 @@ def draw_barcode(barcode, time, folder_name):
     plt.rcParams.update(plt.rcParamsDefault)
     plt.close()
 
-def draw_barcode_gudhi(barcode, folder_name):
+def draw_barcode_gudhi(barcode, folder_name, num):
     fig, ax = plt.subplots()
-    gd.plot_persistence_barcode(persistence=barcode, max_barcodes=1000)
-    ax.set_title(r'Persistence Barcode $\beta_2$')
-    plt.savefig(folder_name+'/barcode_2.png', dpi=1200)
+    gd.plot_persistence_barcode(persistence=barcode, max_barcodes=10000)
+    ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+    if num == 2:
+        plt.title(r'Persistence Barcode $\beta_2$')
+    else:
+        plt.title(r'Persistence Barcode $\beta_1$')
+    plt.savefig(folder_name+'/barcode_'+str(num)+'.png', dpi=500)
+    plt.savefig(folder_name+'/barcode_'+str(num)+'.pdf')
     plt.close()
 
 def draw_frequencies_1(dict, folder_name):
