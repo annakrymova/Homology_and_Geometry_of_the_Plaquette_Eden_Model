@@ -374,6 +374,7 @@ def get_vertices(face, shift):
 
 
 def return_frequencies_1(vect, time):
+    print("\nCalculating frequencies of Betti_1...")
     changes = [vect[i+1]-vect[i] for i in range(len(vect)-1)]
 
     values = [-1, 0, 1, 2]
@@ -386,6 +387,7 @@ def return_frequencies_1(vect, time):
     return freq, changes
 
 def return_frequencies_2(vect, time):
+    print("\nCalculating frequencies of Betti_2...")
     changes = [vect[i+1]-vect[i] for i in range(len(vect)-1)]
     values = [-1, 0, 1]
     freq = {i: [0] for i in values}
@@ -642,7 +644,7 @@ def update_void_dict(v, c, eden):
 def shift_vertices(third_direction):
     directions = [0, 1, 2]
     directions.remove(third_direction)
-    diff = np.array([[1., 1.], [1., -1.], [-1., -1.], [-1., 1.]]) * 0.45
+    diff = np.array([[1., 1.], [1., -1.], [-1., -1.], [-1., 1.]]) * 0.49
     shift = np.array([[0.]*3]*4)
     for i in range(4):
         shift[i][directions] = diff[i]
@@ -750,8 +752,8 @@ def bars_from_tree(b, tag):
 def num_holes(created_holes, holes):
     tricube = dict.fromkeys(['l','i'], 0)
     tricube_f = dict.fromkeys(['l','i'], 0)
-    tetracube = dict.fromkeys(['I', 'L', 'T', 'O', 'Z', 'A1', 'A2'], 0)
-    tetracube_f = dict.fromkeys(['I', 'L', 'T', 'O', 'Z', 'A1', 'A2'], 0)
+    tetracube = dict.fromkeys(['I', 'L', 'T', 'O', 'Z', 'Tower', 'Tripod'], 0)
+    tetracube_f = dict.fromkeys(['I', 'L', 'T', 'O', 'Z', 'Tower', 'Tripod'], 0)
 
     total_3 = [i for i in created_holes if i[-2] == 3]
     final_3 = [holes[i] for i in holes if len(holes[i]) == 3]
@@ -791,9 +793,9 @@ def num_holes(created_holes, holes):
         elif dist == [1.4, 1.4, 2.2]:
             typ = 'Z'
         elif dist == [1.4, 1.4, 1.4]:
-            typ = 'A2'
+            typ = 'Tripod'
         else:
-            typ = 'A1'
+            typ = 'Tower'
         tetracube[typ] += 1
     for x in final_4:
         dist = distances(x)
@@ -808,9 +810,9 @@ def num_holes(created_holes, holes):
         elif dist == [1.4, 1.4, 2.2]:
             typ = 'Z'
         elif dist == [1.4, 1.4, 1.4]:
-            typ = 'A2'
+            typ = 'Tripod'
         else:
-            typ = 'A1'
+            typ = 'Tower'
         tetracube_f[typ] += 1
     return tricube, tricube_f, tetracube, tetracube_f
 
@@ -855,7 +857,7 @@ def final_inner_2d(holes, perimeter, eden):
 
 
 """DRAWING and PLOTTING"""
-def draw_square(x0, y0, z0, d, ax, alpha=1, col='gray', ls=0.47):
+def draw_square(x0, y0, z0, d, ax, alpha=1, col='gray', ls=0.495):
     """With center at x, y, z draw a square of area ls^2"""
     """d = 1 if square is parallel to xOy, d = 2 if x0z, d = 3 if y0z"""
     """ls is a half of square side"""
@@ -896,7 +898,7 @@ def add_box(eden, ax, max_range=5):
     ax.set_ylim(mid_y - max_range, mid_y + max_range)
     ax.set_zlim(mid_z - max_range, mid_z + max_range)
 
-def draw_eden(eden, folder_name):
+def draw_eden(eden, folder_name, t, tile = None):
     # ax.grid(True)
     # plt.style.use('ggplot')
     fig = plt.figure()
@@ -912,14 +914,23 @@ def draw_eden(eden, folder_name):
 
     for x in eden:
         if eden[x][0] == 1:
-            draw_square(x[0], x[1], x[2], x[3], ax=ax, col='grey')#'tab:blue')
-    draw_square(0, 0, 0.5, 2, ax=ax, col='green')
+            draw_square(x[0], x[1], x[2], x[3], ax=ax, col='#0077df')#'tab:blue')
+        else:
+            draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.4, col='grey')
+    # draw_square(0, 0, 0.5, 2, ax=ax, col='green')
+    if tile is not None:
+        draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, col='orange')
+
+    # y = np.linspace(-0.5, 0.5, 10)
+    # x = [0.5]*len(y)
+    # z = [0.5]*len(y)
+    # ax.plot(x, y, z, color='m', linewidth=5)
     plt.show()
     plt.savefig(folder_name+'/eden'+str(t)+'.png', format='png', dpi=500)
     plt.savefig(folder_name+'/eden'+str(t)+'.pdf')
     plt.close()
 
-def draw_complex(eden, time, tile=None):
+def draw_complex(eden, time, folder_name, tile=None):
     # ax.grid(True)
     plt.style.use('ggplot')
     fig = plt.figure()
@@ -940,8 +951,11 @@ def draw_complex(eden, time, tile=None):
         draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.3, col='dimgray')
         # if eden[x][0] == 0:
         #     draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.3, col='lightgrey')
-    for x in tile:
-        draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=1, col='dimgrey')
+    # for x in tile:
+    x = tile
+    draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=1, col='orange')
+    draw_square(0, 0, 0.5, 2, ax=ax, col='green')
+
     # draw_square(0, 0, 0.5, 2, ax=ax, col='green')
     # draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, col='darkorange')
     plt.savefig(folder_name+'/eden_' + str(time) + '.png', format='png', dpi=500)
@@ -980,6 +994,7 @@ def draw_barcode_gudhi(barcode, folder_name):
     plt.close()
 
 def draw_frequencies_1(dict, folder_name):
+    print("\nPlotting frequencies of Betti_1...")
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     l = len(dict[0])
