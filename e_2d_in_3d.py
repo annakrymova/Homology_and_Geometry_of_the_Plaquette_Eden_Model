@@ -19,7 +19,8 @@ def grow_eden(t, model):
     """perimeter is an array consisting of all tiles that are on the perimeter"""
     inner_perimeter = []
     shift_for_vertices = shift_vertices(0), shift_vertices(1), shift_vertices(2)
-    process = [return_vertices((0, 0, 0.5, 2), shift_for_vertices)]
+
+    process_ripser = [(0, 0, 0.5, 2)]
     """array for MAYA"""
     perimeter_len = []  # an array consisting of perimeter lengths at every time step
 
@@ -69,6 +70,7 @@ def grow_eden(t, model):
         x = random.randint(0, len(perimeter) - 1)
         tile_selected = perimeter[x]
         process += [return_vertices(tile_selected, shift_for_vertices)]
+        process_ripser += [tile_selected]
         perimeter.pop(x)
         eden[tile_selected][0] = 1
 
@@ -114,6 +116,7 @@ def grow_eden(t, model):
             v = nearest_voids(tile_selected)
             c = nearest_cubes(tile_selected)
             faces = update_void_dict(v, c, eden)
+            del process_ripser[-1]
 
             t0, t1 = 0, 0
             if int(sum(faces[0]) / 6) == 1:
@@ -150,8 +153,8 @@ def grow_eden(t, model):
     final_barcode = barcode_forest(barcode, tags)
     final_barcode.sort(reverse=True)
 
-    return betti_1_total_vector, per_2d, per_3d, betti_2_total_vector, eden,\
-           process, created_holes, holes, final_barcode
+    return betti_1_total_vector, per_2d, per_3d, betti_2_total_vector, eden, process, created_holes, holes,\
+           final_barcode, vertices, process_ripser, inner_perimeter, voids, per_2d_in, per_3d_in
 
 """SUPPLEMENTARY FUNCTIONS"""
 def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time, created_holes, tags,
@@ -293,6 +296,55 @@ def add_neighbours_bfs(bfs, j, iterations, merged, finished, eden, voids):
         if merged:
             break
     return bfs, merged, finished
+
+def create_dist_matrix(Time, eden, num_vert, folder_name):
+    x = 10
+    matrix = np.full((num_vert, num_vert), np.inf)
+    shift = [np.array([[0, 0.5, 0.5], [0, 0.5, -0.5], [0, -0.5, -0.5], [0, -0.5, 0.5]]),
+             np.array([[0.5, 0, 0.5], [0.5, 0, -0.5], [-0.5, 0, -0.5], [-0.5, 0, 0.5]]),
+             np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, -0.5, 0], [-0.5, 0.5, 0]])]
+    dict_vert = {}
+    vertex_num = 0
+
+    print("\nCreating distance matrix")
+    pbar = tqdm(total=len(eden))
+
+    for t, x in enumerate(eden):
+        pbar.update(1)
+        vert = get_vertices(x, shift[int(x[3])])
+        for v in vert:
+            if v not in dict_vert:
+                dict_vert[v] = vertex_num
+                vertex_num += 1
+        ind = []
+        for v in vert:
+            ind.append(dict_vert[v])
+        x = 10
+        edges = [[ind[0], ind[1]], [ind[1], ind[2]], [ind[2], ind[3]], [ind[3], ind[0]], [ind[0], ind[2]]]
+        for e in edges:
+            e.sort(reverse=True)
+        for e in edges:
+            if matrix[e[0], e[1]] == float('inf'):
+                matrix[e[0], e[1]] = t+1
+    matrix = np.tril(matrix, -1)
+    np.savetxt(folder_name+'/dist_matrix'+str(Time)+'.txt', matrix, fmt='%1.0f', delimiter=',')
+
+    # print("\nWriting matrix to a file")
+    # pbar = tqdm(total=num_vert)
+    # f = open("file.txt", "w+")
+    # for i, line in enumerate(matrix):
+    #     pbar.update(1)
+    #     np.savetxt(f, line[:i], fmt='%1.0f', newline=",")
+    #     f.write("\n")
+    # f.close()
+    return matrix
+
+
+def get_vertices(face, shift):
+    vertices = np.array([face[:3]]*4)
+    vertices += shift
+    return list(map(tuple, vertices))
+
 
 def return_frequencies_1(vect, time):
     changes = [vect[i+1]-vect[i] for i in range(len(vect)-1)]
