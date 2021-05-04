@@ -11,9 +11,10 @@ DATE: MAY 15, 2021
 LICENSE: GNU GENERAL PUBLIC LICENSE (see license.txt)
 
 ## Overview 
-This package includes software to run simulations of the Eden Growth Model in Z^d in dimensions 2-5, and analyze the topology (Betti numbers and persistent homology) and local geometry of the structure. The software is also able to read a .txt file with the time at which tiles should be added. This allows analysis of simulations from other stochastic models. Note: the cells in a .txt file should be in chronological order. For graphical representation, the program can create a picture of a two-dimensional growth model and can output a .txt file for 3-dimensional growth modles which can be inputed to MAYA to produce an interactive 3-dimensional image.
+This package includes software to run simulations of the Plaquette Eden Model, which is a discrete 2-dimensional stochastic cell growth process defined on the 3-dimensional regular cubical tessellation of the Euclidian space.  The sofrware analyzes the topology (Betti numbers and persistent homology) and local geometry of the structure. 
+For graphical representation, the program can create a picture of the Plaquette Eden Model, or alternitevly can output a .txt file which can be inputed to MAYA to produce an interactive 3-dimensional image.
 
-GUDHI is used to compute homology and persistent homology in 3D, 4D, and 5D. If you use this functionality, make sure to cite this library.
+Ripser and GUDHI are used to compute and visulize persistent homology of the the Plaquette Eden Model. If you use this functionality, make sure to cite this library.
 
 To represent the topology and local geometry of the Eden growth model, the software can build plots showing the following:
 * the frequencies of the changes in Betti numbers (Figure 6.1 in the paper),
@@ -26,33 +27,33 @@ The folder *2d/files* contains the data of the 2D simulations that were used in 
 All plots and graphs are saved in the project folder.
 
 ## Acknowledgments
-Fedor Manin supported in part by NSF DMS-2001042. <br />
 Erika Roldan was supported in part by NSF-DMS #1352386 and NSF-DMS #1812028 during 2018-2019. <br />
 This project received funding from the European Union’s Horizon 2020 research and innovation program under the
 Marie Skłodowska-Curie grant agreement No. 754462.
 
-
 ## Citations 
 
-If you use this code, cite the paper TOPOLOGY AND LOCAL GEOMETRY OF THE EDEN MODEL. If you use the computations of homology and persistent homology for 3D-5D, cite the GUDHI package.
-
-```
-@article{manin2020topology,
-   title={Topology and local geometry of the Eden model},
-   author={Manin, Fedor and Roldan, Erika and Schweinhart, Benjamin},
-   journal={arXiv preprint arXiv:2005.12349},
-   year={2020}
-}
-```
+If you use this code, cite the paper TOPOLOGY AND LOCAL GEOMETRY OF THE EDEN MODEL. 
+If you use the computations and visualization of persistent homology, cite the Ripser and the GUDHI packages.
 
 ## Dependencies:
 
 Python 3.8.
 
+Ripser. https://github.com/Ripser/ripser
 GUDHI. http://gudhi.gforge.inria.fr/
 
+## Ripser Installation
 
-## Installation
+Here is how to obtain, build, and run Ripser:
+```
+git clone https://github.com/Ripser/ripser.git
+cd ripser
+make
+./ripser examples/sphere_3_192.lower_distance_matrix
+```
+
+## Gudhi Installation
 
 To install this package with conda run one of the following:
 ```
