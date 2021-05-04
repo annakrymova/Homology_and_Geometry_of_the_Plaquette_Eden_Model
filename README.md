@@ -1,4 +1,4 @@
-## Homology-and-Geometry-of-the-Plaquette-Eden-Model
+## Homology and Geometry of the Plaquette Eden Model
 
 
 DEVELOPERS: <br />
