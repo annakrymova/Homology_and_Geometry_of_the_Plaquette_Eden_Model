@@ -9,6 +9,7 @@ import collections
 from scipy.optimize import curve_fit
 import gudhi as gd
 import re
+import itertools
 
 """GROWING"""
 def grow_eden(t, model):
@@ -59,6 +60,11 @@ def grow_eden(t, model):
     per_3d = [len(voids)]
     per_2d_in = [0]
     per_3d_in = [0]
+
+    per_2d_in_ = []
+    per_3d_in_ = []
+    per_2d_ = []
+    per_3d_ =[ ]
 
     euler_char_prev = 1
     holes_voids = []
@@ -170,11 +176,18 @@ def grow_eden(t, model):
         betti_1_total = return_betti_1(betti_2_total, euler_character)
         betti_1_total_vector += [betti_1_total]
 
+        if size % int(t/10) == 0 and size >= t/2:
+            per_2d_in_ += [len(get_inner_per(eden, holes))/per_2d[-1]]
+            per_3d_in_ += [len(get_inner_per_3(voids))/per_3d[-1]]
+            per_2d_ += [per_2d[-1]]
+            per_3d_ += [per_3d[-1]]
+
     final_barcode = barcode_forest(barcode, tags)
     final_barcode.sort(reverse=True)
 
     return betti_1_total_vector, per_2d, per_3d, betti_2_total_vector, eden, process, created_holes, holes,\
-           final_barcode, vertices, process_ripser, inner_perimeter, voids, per_2d_in, per_3d_in
+           final_barcode, vertices, process_ripser, inner_perimeter, voids, per_2d_in, per_3d_in, inner_perimeter_3d,\
+           per_2d_in_, per_3d_in_, per_2d_, per_3d_
 
 """SUPPLEMENTARY FUNCTIONS"""
 def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, time, created_holes, tags,
@@ -264,35 +277,35 @@ def increment_betti_2(eden, tile_selected, voids, total_holes, holes, barcode, t
     if betti_2 != 0:
         betti_2 -= filled
 
-    # change 2d inner perimeter
-    if per == 0:  # we are inside a hole:
-        inner_perimeter.remove(tile_selected)
-        eden[tile_selected][2] = 0
-        tile = list(tile_selected)
-        if betti_2 == 0 and filled == 0:
-            hole = holes[num_hole]
-            tiles = tiles_from_voids(hole)
-            nearest_tiles = shift_for_neighbors(int(tile[3])) + (tile[:3] + [0])
-            for n in nearest_tiles:
-                n[3] = dimension(n[:3])
-            nearest_tiles = [tuple(n) for n in nearest_tiles]
-            for x in nearest_tiles:
-                if x in perimeter and x in tiles and x not in inner_perimeter:
-                    inner_perimeter.append(x)
-                    eden[x][2] = 1
-    else:
-        if betti_2 == 1:
-            hole = holes[total_holes]
-            # update inner 3d perim
-            for x in hole:
-                if x not in inner_perimeter_3d:
-                    inner_perimeter_3d += [x]
-            if len(hole) > 1:
-                tiles = tiles_from_voids(hole)
-                for x in tiles:
-                    if x in perimeter:
-                        inner_perimeter.append(x)
-                        eden[x][2] = 1
+    # # change 2d inner perimeter
+    # if per == 0:  # we are inside a hole:
+    #     inner_perimeter.remove(tile_selected)
+    #     eden[tile_selected][2] = 0
+    #     tile = list(tile_selected)
+    #     if betti_2 == 0 and filled == 0:
+    #         hole = holes[num_hole]
+    #         tiles = tiles_from_voids(hole)
+    #         nearest_tiles = shift_for_neighbors(int(tile[3])) + (tile[:3] + [0])
+    #         for n in nearest_tiles:
+    #             n[3] = dimension(n[:3])
+    #         nearest_tiles = [tuple(n) for n in nearest_tiles]
+    #         for x in nearest_tiles:
+    #             if x in perimeter and x in tiles and x not in inner_perimeter:
+    #                 inner_perimeter.append(x)
+    #                 eden[x][2] = 1
+    # else:
+    #     if betti_2 == 1:
+    #         hole = holes[total_holes]
+    #         # update inner 3d perim
+    #         for x in hole:
+    #             if x not in inner_perimeter_3d:
+    #                 inner_perimeter_3d += [x]
+    #         if len(hole) > 1:
+    #             tiles = tiles_from_voids(hole)
+    #             for x in tiles:
+    #                 if x in perimeter:
+    #                     inner_perimeter.append(x)
+    #                     eden[x][2] = 1
 
     return betti_2, total_holes, eden, holes, voids, barcode, created_holes, tags, inner_perimeter, holes_voids,\
            n_filled_cubes, inner_perimeter_3d
@@ -345,7 +358,6 @@ def create_dist_matrix(Time, eden, num_vert, folder_name):
         ind = []
         for v in vert:
             ind.append(dict_vert[v])
-        x = 10
         edges = [[ind[0], ind[1]], [ind[1], ind[2]], [ind[2], ind[3]], [ind[3], ind[0]], [ind[0], ind[2]]]
         for e in edges:
             e.sort(reverse=True)
@@ -883,14 +895,15 @@ def draw_eden(eden, folder_name, t, tile=None):
     for x in eden:
         if eden[x][0] == 1:
             draw_square(x[0], x[1], x[2], x[3], ax=ax, col='#0077df')#'tab:blue')
-        else:
-            draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.4, col='grey')
+        # else:
+        #     draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.4, col='grey')
     draw_square(0, 0, 0.5, 2, ax=ax, col='green')
     if tile is not None:
         draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, col='orange')
 
     plt.savefig(folder_name+'/eden'+str(t)+'.png', format='png', dpi=500)
     plt.savefig(folder_name+'/eden'+str(t)+'.pdf')
+    plt.show()
     plt.close()
 
 def draw_complex(eden, time, folder_name, tile=None):
@@ -1002,14 +1015,14 @@ def draw_frequencies_1(dict, folder_name):
     fig.savefig(folder_name+'/fr_b_1.pdf', dpi=500)
     plt.close()
 
-def draw_frequencies_2(dict, changes, folder_name):
+def draw_frequencies_2(dict, folder_name):
     fig, ax = plt.subplots()
     l = len(dict[0])
 
-    ch_1 = [i for i, j in enumerate(changes) if j == -1]
-    y_1 = []
-    for x in ch_1:
-        y_1 += [dict[-1][x+1]]
+    # ch_1 = [i for i, j in enumerate(changes) if j == -1]
+    # y_1 = []
+    # for x in ch_1:
+    #     y_1 += [dict[-1][x+1]]
 
     sh = []
     for j in np.arange(-1, 2):
@@ -1074,9 +1087,17 @@ def draw_frequencies_1_eu(dict, changes, folder_name):
         sh.append(next((i for i, x in enumerate(dict[j]) if x), 0))
     shift = max(sh)
 
-    ax.plot(range(shift, l), dict[0][shift:], color='tab:orange', label='0',  linewidth=0.75)
-    ax.plot(range(shift, l), dict[1][shift:], color='tab:green', label='+1',  linewidth=0.75)
-    ax.plot(range(shift, l), dict[2][shift:], color='tab:blue', label='+2',  linewidth=0.75)
+    linew = 1
+
+    ax.plot(range(shift, l), dict[0][shift:], color='tab:orange', label='0',  linewidth=linew)
+    ax.plot(range(shift, l), dict[1][shift:], color='tab:green', label='+1',  linewidth=linew)
+    ax.plot(range(shift, l), dict[2][shift:], color='tab:blue', label='+2',  linewidth=linew)
+
+    mean_values = {x: sum(dict[x][(-int(len(dict[x])/10)):]) / len(dict[x][(-int(len(dict[x])/10)):]) for x in range(0, 3)}
+
+    ax.plot(range(shift, l), [mean_values[0]]*len(range(shift, l)), color='tab:orange', linestyle='--', linewidth=linew)
+    ax.plot(range(shift, l), [mean_values[1]]*len(range(shift, l)), color='tab:green', linestyle='--', linewidth=linew)
+    ax.plot(range(shift, l), [mean_values[2]]*len(range(shift, l)), color='tab:blue', linestyle='--', linewidth=linew)
 
     if next((i for i, x in enumerate(dict[-1]) if x), 0) != 0:
         plt.scatter(ch_1, y_1, s=5, marker='o', color="tab:red", label='-1')
@@ -1084,6 +1105,11 @@ def draw_frequencies_1_eu(dict, changes, folder_name):
     plt.yscale('log')
     ax.set_ylabel(r'Frequency of Change in $\beta_1$')
     ax.set_xlabel('t')
+
+    my_yticks = list(mean_values.values())
+    my_yticks2 = [round(x, 3) for x in my_yticks]
+    plt.yticks(my_yticks, my_yticks2)
+
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
     ax.legend(loc=1, prop={'size': 6})
     fig.savefig(folder_name+'/fr_b_1.png', format='png', dpi=500)
@@ -1101,23 +1127,22 @@ def draw_diagram_holes(created_holes, holes, folder_name):
         return a * x ** b
 
     counter_cr = collections.Counter(fr_cr)
-
-    xdata = list(counter_cr.keys())
-    ydata = list(counter_cr.values())
-
-    try:
-        popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
-    except RuntimeError:
-        popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., -10.], [10000., 10.]))
-
+    # xdata = list(counter_cr.keys())
+    # ydata = list(counter_cr.values())
+    #
+    # try:
+    #     popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+    # except RuntimeError:
+    #     popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., -10.], [10000., 10.]))
+    #
     fig, ax = plt.subplots()
     # plt.yscale('log')
 
-    xdataplot = np.arange(xdata[0], xdata[-1], 0.1)
-    # print(ydata, list(func(xdataplot, *popt)))
-
-    plt.plot(xdataplot-width/2, list(func(xdataplot, *popt)), color=[0, 94/255, 255/255], label=r'fit: $y=%5.2f x^{%5.3f}$' % tuple(popt), linewidth=0.75)
-    # plt.show()
+    # xdataplot = np.arange(xdata[0], xdata[-1], 0.1)
+    # # print(ydata, list(func(xdataplot, *popt)))
+    #
+    # plt.plot(xdataplot-width/2, list(func(xdataplot, *popt)), color=[0, 94/255, 255/255], label=r'fit: $y=%5.2f x^{%5.3f}$' % tuple(popt), linewidth=0.75)
+    # # plt.show()
 
     # xdata = np.array(xdata)
     # ydata = np.array(ydata)
@@ -1138,7 +1163,6 @@ def draw_diagram_holes(created_holes, holes, folder_name):
     # print(popt)
     # print(type(popt[0]))
 
-
     # y_plot = np.exp(popt[0]) * np.exp(-popt[1]*xdataplot)
 
     # plt.plot(xdataplot-width/2, y_plot, color=[1, 0.27, 0.95], label=r'fit: $y=%5.2f e^{-%5.3f*x}$' % tuple([np.exp(popt[0]), popt[1]]), linewidth=0.75)
@@ -1157,8 +1181,73 @@ def draw_diagram_holes(created_holes, holes, folder_name):
 
     ax.bar(np.array(list(counter_cr.keys())) - width/2, counter_cr.values(), width, color=[(0.44, 0.57, 0.79)], label='Total')
 
-    xdata = list(counter_final.keys())
-    ydata = list(counter_final.values())
+    # xdata = list(counter_final.keys())
+    # ydata = list(counter_final.values())
+
+    # try:
+    #     popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+    # except RuntimeError:
+    #     popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., -10.], [10000., 10.]))
+
+    # xdataplot = np.arange(xdata[0], xdata[-1], 0.1)
+    # plt.plot(xdataplot+width/2, list(func(xdataplot, *popt)), color=(225/256, 128/256, 0/256), label=r'fit: $y=%5.2f x^{%5.3f}$' % tuple(popt), linewidth=0.75)
+
+    ax.bar(np.array(list(counter_final.keys())) + width/2, counter_final.values(), width, color=[(225/256, 174/256, 122/256)], label='Final')
+
+    ax.set_ylabel('Frequency of Number of Holes')
+    ax.set_xlabel('Volume')
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    if len(labels) >= 70:
+        plt.setp(ax.get_xticklabels(), fontsize=2)
+    elif len(labels) >= 60:
+        plt.setp(ax.get_xticklabels(), fontsize=3)
+    elif len(labels) >= 50:
+        plt.setp(ax.get_xticklabels(), fontsize=4)
+    elif len(labels) >= 45:
+        plt.setp(ax.get_xticklabels(), fontsize=5)
+    elif len(labels) >= 40:
+        plt.setp(ax.get_xticklabels(), fontsize=6)
+    elif len(labels) >= 30:
+        plt.setp(ax.get_xticklabels(), fontsize=7)
+    elif len(labels) >= 20:
+        plt.setp(ax.get_xticklabels(), fontsize=6)
+
+    ax.legend(loc=1)
+    fig.tight_layout()
+    fig.savefig(folder_name+'/holes.png', format='png', dpi=500)
+    fig.savefig(folder_name+'/holes.pdf')
+    plt.close()
+
+def draw_diagram_holes2(cr_h, f_h, folder_name, max):
+    width = 0.5
+    # max+=1
+
+    def func(x, a, b):
+        return a * x ** b
+
+    xdata = list(np.arange(1, len(cr_h)+1))[:max]
+    ydata = list(cr_h)[:max]
+
+    try:
+        popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+    except RuntimeError:
+        popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., -10.], [10000., 10.]))
+
+    fig, ax = plt.subplots()
+    plt.yscale('log')
+
+    xdataplot = np.arange(xdata[0], xdata[-1], 0.1)
+
+    plt.plot(xdataplot-width/2, list(func(xdataplot, *popt)), color=[0, 94/255, 255/255], label=r'fit: $y=%5.2f x^{%5.3f}$' % tuple(popt), linewidth=0.75)
+
+    labels = [0]+xdata
+    x = np.arange(len(labels))
+
+    ax.bar(np.array(xdata) - width/2, ydata, width, color=[(0.44, 0.57, 0.79)], label='Total')
+
+    xdata = list(np.arange(1, len(f_h)+1))[:max]
+    ydata = list(f_h)[:max]
 
     try:
         popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
@@ -1168,7 +1257,7 @@ def draw_diagram_holes(created_holes, holes, folder_name):
     xdataplot = np.arange(xdata[0], xdata[-1], 0.1)
     plt.plot(xdataplot+width/2, list(func(xdataplot, *popt)), color=(225/256, 128/256, 0/256), label=r'fit: $y=%5.2f x^{%5.3f}$' % tuple(popt), linewidth=0.75)
 
-    ax.bar(np.array(list(counter_final.keys())) + width/2, counter_final.values(), width, color=[(225/256, 174/256, 122/256)], label='Final')
+    ax.bar(np.array(xdata) + width/2, ydata, width, color=[(225/256, 174/256, 122/256)], label='Final')
 
     ax.set_ylabel('Frequency of Number of Holes')
     ax.set_xlabel('Volume')
@@ -1221,11 +1310,11 @@ def draw_tri_tetra(tri, tri_f, tetra, tetra_f, folder_name):
         print("No tricubes and tetracubes in this complex")
         plt.close()
 
-def plot_b_per(b1, b2, p2, p3, time, N, folder_name):
+def plot_b_per(b1, b2, p2, p3, time, N, folder_name, m):
     n = int(time/10)
     nn = n
 
-    def func(x, a, b, c):
+    def func2(x, a, b, c):
         return a * x ** b + c
     ydata_f = b1
     xdata_f = range(len(ydata_f))
@@ -1236,34 +1325,51 @@ def plot_b_per(b1, b2, p2, p3, time, N, folder_name):
     # plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
     # plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
     plt.plot(xdata_f[n:], ydata_f[n:], 'm-', label=r'$\beta_1(t)$ data',  linewidth=0.75)
-    try:
-        popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
-    except RuntimeError:
-        popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
 
-    plt.plot(xdata_f[n:], func(xdata_f[n:], *popt), 'm--', label=r'fit: $y=%5.2f x^{%5.3f}%+5.1f$' % tuple(popt), linewidth=0.75)
+    if m != 1:
+        try:
+            popt, pcov = curve_fit(func2, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+        except RuntimeError:
+            popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
 
-    ydata_f = b2
-    xdata_f = range(len(ydata_f))
-    ydata = ydata_f[N:]
-    xdata = xdata_f[N:]
-    plt.plot(xdata_f[n:], ydata_f[n:], 'b-', label=r'$\beta_2(t)$ data',  linewidth=0.75)
-    try:
-        popt, pcov = curve_fit(func, xdata, ydata)
-    except RuntimeError:
-        popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -5000], [1., 2, 4000]))
-    plt.plot(xdata_f[n:], func(xdata_f[n:], *popt), 'b--', label=r'fit: $y=%5.3f x^{%5.3f}%+5.3f$' % tuple(popt),  linewidth=0.75)
+        plt.plot(xdata_f[n:], func2(xdata_f[n:], *popt), 'm--', label=r'fit: $y=%5.2f x^{%5.3f}%+5.1f$' % tuple(popt), linewidth=0.75)
 
-    # Constrain the optimization to the linear function
-    try:
-        popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -np.inf], [1., 1., np.inf]))
-    except ValueError:
-        popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -5000], [1., 1., 10]))
+        ydata_f = b2
+        xdata_f = range(len(ydata_f))
+        ydata = ydata_f[N:]
+        xdata = xdata_f[N:]
+        plt.plot(xdata_f[n:], ydata_f[n:], 'b-', label=r'$\beta_2(t)$ data',  linewidth=0.75)
+        try:
+            popt, pcov = curve_fit(func2, xdata, ydata)
+        except RuntimeError:
+            popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -5000], [1., 2, 4000]))
+        plt.plot(xdata_f[n:], func2(xdata_f[n:], *popt), 'b--', label=r'fit: $y=%5.3f x^{%5.3f}%+5.3f$' % tuple(popt),  linewidth=0.75)
 
-    plt.plot(xdata_f[nn+n:], func(xdata_f[nn+n:], *popt), 'g--', label=r'fit: $y=%5.3f x^{%5.3f}%+5.3f$' % tuple(popt),  linewidth=0.75)
+        # Constrain the optimization to the linear function
+        try:
+            popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -np.inf], [1., 1., np.inf]))
+        except ValueError:
+            popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -5000], [1., 1., 10]))
+
+        plt.plot(xdata_f[nn+n:], func2(xdata_f[nn+n:], *popt), 'g--', label=r'fit: $y=%5.3f x^{%5.3f}%+5.3f$' % tuple(popt),  linewidth=0.75)
 
     def func(x, a, b):
         return a * x ** b
+    if m == 1:
+        try:
+            popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+        except RuntimeError:
+            popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
+        if popt[1] > 1.05:
+            try:
+                popt, pcov = curve_fit(func2, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+            except RuntimeError:
+                popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
+
+            plt.plot(xdata_f[n:], func2(xdata_f[n:], *popt), 'm--', label=r'fit: $y=%5.2f x^{%5.3f}%+5.1f$' % tuple(popt), linewidth=0.75)
+        else:
+            plt.plot(xdata_f[n:], func(xdata_f[n:], *popt), 'm--', label=r'fit: $y=%5.2f x^{%5.3f}$' % tuple(popt), linewidth=0.75)
+
     ydata = p2
     xdata = range(len(ydata))
     plt.plot(xdata[n:], ydata[n:], color='orange', linestyle='solid', label=r'$P_{2}(t)$ data',  linewidth=0.75)
@@ -1276,7 +1382,7 @@ def plot_b_per(b1, b2, p2, p3, time, N, folder_name):
     plt.plot(xdata[n:], func(xdata[n:], *popt), color='lightblue', linestyle='dashed', label=r'fit: $y=%5.2f x^{%5.3f}$' % tuple(popt),  linewidth=0.75)
 
     plt.xlabel('t')
-    plt.ylabel('data')
+    plt.ylabel('Growth rates')
     plt.legend(loc=4, prop={'size': 6})
     plt.tight_layout()
     plt.savefig(folder_name+'/per-b-time.png', dpi=400)
@@ -1305,7 +1411,7 @@ def plot_per_inner(p2, p3, time, folder_name):
     # plt.plot(xdata, func(xdata, *popt), color='mediumorchid', linestyle='dashed', label=r'fit: $y=%5.6f x^{%5.3f}$' % tuple(popt),  linewidth=linew)
 
     mean_p2 = sum(p2[-int(len(p2)/10):])/len(p2[-int(len(p2)/10):])
-    mean_p3 = sum(p3[-int(len(p3)/10):])/len(p3[-int(len(p3)/20):])
+    mean_p3 = sum(p3[-int(len(p3)/20):])/len(p3[-int(len(p3)/20):])
 
     plt.plot(range(time), [mean_p3]*time, color='forestgreen', linestyle='--', linewidth=0.75)
     plt.plot(range(time), [mean_p2]*time, color='mediumorchid', linestyle='--', linewidth=0.75)
@@ -1321,6 +1427,44 @@ def plot_per_inner(p2, p3, time, folder_name):
     plt.savefig(folder_name+'/per-inner.pdf', dpi=500)
     plt.close()
 
+def plot_per_inner2(p2, p3, time, folder_name):
+    n = int(0.25*len(p2))
+    from scipy.optimize import curve_fit
+
+    def func(x, a, b):
+        return a * x ** b
+
+    plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+
+    linew = 1
+
+    ydata = p3
+    xdata = range(len(ydata))
+    plt.plot(xdata, ydata, color='forestgreen', linestyle='solid', label=r'inner $P_{3}(t)$ data',  linewidth=linew)
+    popt, pcov = curve_fit(func, xdata[n:], ydata[n:])
+    plt.plot(xdata[n:], func(xdata[n:], *popt), color='forestgreen', linestyle='dashed', label=r'fit: $y=%5.4f x^{%5.3f}$' % tuple(popt),  linewidth=linew)
+
+    ydata = p2
+    xdata = range(len(ydata))
+    plt.plot(xdata, ydata, color='mediumorchid', linestyle='solid', label=r'inner $P_{2}(t)$ data',  linewidth=linew)
+    popt, pcov = curve_fit(func, xdata[n:], ydata[n:])
+    plt.plot(xdata[n:], func(xdata[n:], *popt), color='mediumorchid', linestyle='dashed', label=r'fit: $y=%5.6f x^{%5.3f}$' % tuple(popt),  linewidth=linew)
+
+    mean_p2 = sum(p2[-int(len(p2)/10):])/len(p2[-int(len(p2)/10):])
+    # mean_p3 = sum(p3[-int(len(p3)/20):])/len(p3[-int(len(p3)/20):])
+    #
+    # plt.plot(range(time), [mean_p3]*time, color='forestgreen', linestyle='--', linewidth=0.75)
+    plt.plot(range(time), [mean_p2]*time, color='mediumorchid', linestyle='--', linewidth=0.75)
+
+    plt.xlabel('t')
+    plt.ylabel('Fraction of the Perimeter')
+    plt.legend(loc=4, prop={'size': 6})
+    # my_yticks = [mean_p2, mean_p3]
+    # my_yticks2 = [round(x, 3) for x in my_yticks]
+    # plt.yticks(my_yticks, my_yticks2)
+    plt.savefig(folder_name+'/per-inner.png', dpi=500)
+    plt.savefig(folder_name+'/per-inner.pdf', dpi=500)
+    plt.close()
 
 def draw_square_0(x, y, col='gray', alpha=1, ls=0.35):
     """With center at x, y draw a square of area 1"""
@@ -1342,3 +1486,47 @@ def read_barcode_b1_from_file(folder_name):
             Barcode_b1 += [(1,tuple([ends[0], ends[1]]))]
     return Barcode_b1
 
+def draw_pers_diagram(barcode1, barcode2, size, folder_name, p2):
+    barcode1 = [x for x in barcode1 if x[0] > size / 100 and x[1] - x[0] > size / 1000 and x[1] != float('inf')]
+    x = [x[0] for x in barcode1]
+    y = [x[1] - x[0] for x in barcode1]
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.scatter(x, y, s=0.05, color='limegreen')
+    plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 2))(np.unique(x)), color='forestgreen')
+
+    n = int(size/100)
+    x = list(range(size))[n:]
+    y = p2[n:]
+    plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 2))(np.unique(x)), color='black')
+
+    # gap = 2000
+    # di = dict(zip(x, y))
+    # key = round(size/100, -3)+gap
+    # di2 = dict()
+    # while key < size:
+    #     value = sum([di[x] for x in di if abs(x-key) < gap])/len([di[x] for x in di if abs(x-key) < gap])
+    #     di2[key] = value
+    #     key += 2*gap
+    # # print(di2)
+    # plt.plot(list(di2.keys()), list(di2.values()), color='navy')
+
+    plt.savefig(folder_name+'/pers-d.png', dpi=200)
+    plt.savefig(folder_name+'/pers-d.pdf', dpi=200)
+    plt.close()
+
+def get_inner_per(eden, holes):
+    all_inner_voids = list(itertools.chain.from_iterable(list(holes.values())))
+    inner_tiles = []
+    for x in eden:
+        if eden[x][0] == 0:
+            v = nearest_voids(x)
+            if v[0] in all_inner_voids:
+                inner_tiles += [x]
+            if v[0] in all_inner_voids and v[1] not in all_inner_voids:
+                a = 10
+    return inner_tiles
+
+def get_inner_per_3(voids):
+    inner_voids = [x for x in voids if voids[x][-3] !=0]
+    return inner_voids
