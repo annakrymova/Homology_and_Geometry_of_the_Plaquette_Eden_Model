@@ -1389,6 +1389,101 @@ def plot_b_per(b1, b2, p2, p3, time, N, folder_name, m):
     plt.savefig(folder_name+'/per-b-time.pdf', dpi=400)
     plt.close()
 
+def plot_b_per2(b1, b2, p2, p3, time, N, folder_name, m, fs, lw):
+    fig, ax = plt.subplots()
+    # n = int(time/10)
+    n = 100
+    nn = n
+
+    def func2(x, a, b, c):
+        return a * x ** b + c
+    ydata_f = b1
+    xdata_f = range(len(ydata_f))
+    ydata = ydata_f[N:]
+    xdata = xdata_f[N:]
+    plt.xscale('log')
+    plt.yscale('log')
+    # plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+    # plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+
+    plt.plot(xdata_f[n:], ydata_f[n:], 'm-', label=r'$\beta_1(t)$',  linewidth=lw)
+
+    if m != 1:
+        try:
+            popt, pcov = curve_fit(func2, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+        except RuntimeError:
+            popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
+
+        plt.plot(xdata_f[n:], func2(xdata_f[n:], *popt), 'm--', label=r'$\beta_1(t)=%5.2f t^{%5.2f}%+5.1f$' % tuple(popt), linewidth=lw)
+
+        ydata_f = b2
+        xdata_f = range(len(ydata_f))
+        ydata = ydata_f[N:]
+        xdata = xdata_f[N:]
+        plt.plot(xdata_f[n:], ydata_f[n:], 'b-', label=r'$\beta_2(t)$',  linewidth=0.75)
+        try:
+            popt, pcov = curve_fit(func2, xdata, ydata)
+        except RuntimeError:
+            popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -5000], [1., 2, 4000]))
+        plt.plot(xdata_f[n:], func2(xdata_f[n:], *popt), 'b--', label=r'$y=%5.2f x^{%5.2f}%+5.2f$' % tuple(popt),  linewidth=lw)
+
+        # Constrain the optimization to the linear function
+        try:
+            popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -np.inf], [1., 1., np.inf]))
+        except ValueError:
+            popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -5000], [1., 1., 10]))
+
+        plt.plot(xdata_f[nn+n:], func2(xdata_f[nn+n:], *popt), 'g--', label=r'$y=%5.2f x^{%5.2f}%+5.1f$' % tuple(popt),  linewidth=lw)
+
+    def func(x, a, b):
+        return a * x ** b
+    if m == 1:
+        try:
+            popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+        except RuntimeError:
+            popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
+        if popt[1] > 1.05:
+            try:
+                popt, pcov = curve_fit(func2, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+            except RuntimeError:
+                popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
+
+            plt.plot(xdata_f[n:], func2(xdata_f[n:], *popt), 'm--', label=r'$\beta_1(t)=%5.2f t^{%5.2f}%+5.1f$' % tuple(popt), linewidth=lw)
+        else:
+            plt.plot(xdata_f[n:], func(xdata_f[n:], *popt), 'm--', label=r'$\beta_1(t)=%5.2f t^{%5.2f}$' % tuple(popt), linewidth=lw)
+
+    ydata = p2
+    xdata = range(len(ydata))
+    plt.plot(xdata[n:], ydata[n:], color='orange', linestyle='solid', label=r'$P_{2}(t)$',  linewidth=lw)
+    popt, pcov = curve_fit(func, xdata, ydata)
+    plt.plot(xdata[n:], func(xdata[n:], *popt), color='orange', linestyle='dashed', label=r'$P_2(t)=%5.2f t^{%5.2f}$' % tuple(popt),  linewidth=lw)
+    ydata = p3
+    xdata = range(len(ydata))
+    plt.plot(xdata[n:], ydata[n:], color='deepskyblue', linestyle='solid', label=r'$P_{3}(t)$',  linewidth=lw)
+    popt, pcov = curve_fit(func, xdata, ydata)
+    plt.plot(xdata[n:], func(xdata[n:], *popt), color='deepskyblue', linestyle='dashed', label=r'$P_3(t)=%5.2f t^{%5.2f}$' % tuple(popt),  linewidth=lw)
+
+    # font = {'size': fs}
+    # plt.rc('font', **font)
+
+    plt.xlabel('t')
+    plt.ylabel('Growth Rates')
+    handles, labels = ax.get_legend_handles_labels()
+    myorder = [0, 2, 4, 1, 3, 5]
+    handles = [handles[i] for i in myorder]
+    labels = [labels[i] for i in myorder]
+    # plt.legend(handles, labels, prop={'size': 6}, loc='lower right', ncol=2)
+    plt.legend(handles, labels, loc='lower right', ncol=2)
+    # plt.legend(loc=4, prop={'size': 6})
+    # plt.rc('xtick', labelsize=fs)
+    # plt.rc('ytick', labelsize=fs)
+    # plt.rc('axes', labelsize=fs)
+    plt.rcParams.update({'font.size': fs, 'font.weight': 'light'})
+    plt.tight_layout()
+    plt.savefig(folder_name+'/per-b-time-big.png', dpi=400)
+    plt.savefig(folder_name+'/per-b-time-big.pdf', dpi=400)
+    plt.close()
+
 def plot_per_inner(p2, p3, time, folder_name):
 
     def func(x, a, b):

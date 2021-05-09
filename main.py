@@ -16,7 +16,7 @@ from e_2d_in_3d import num_holes, grow_eden, return_frequencies_1, return_freque
             draw_frequencies_1, draw_frequencies_2, draw_diagram_holes, draw_tri_tetra, plot_b_per, draw_eden, \
             draw_frequencies_1_eu, draw_frequencies_2_eu, draw_barcode_gudhi, create_dist_matrix, plot_per_inner,\
             neighbours_diag, read_barcode_b1_from_file, draw_diagram_holes2, plot_per_inner2, draw_pers_diagram,\
-            nearest_voids, get_inner_per, get_inner_per_3
+            nearest_voids, get_inner_per, get_inner_per_3, plot_b_per2
 
 
 def read_value(arr):
@@ -71,7 +71,7 @@ if not file:
     #         break
     #     except ValueError:
     #         print("Oops!  That was no valid number.  Try again...")
-    num_models = 5
+    num_models = 1
     # cols = ['2d_total', '2d_in', '2d_out', '3d_total', '3d_in', '3d_out']
     # df = pd.DataFrame(columns=cols)
     Per_2d_in_array = np.zeros(shape=(num_models, Time))
@@ -255,16 +255,16 @@ if not file:
         # print(Process)
 
         """DF freq b1 """
-        # freq, changes = return_frequencies_1(Betti_1_total_vector, Time)
-        # if model == 1:
-        #     draw_frequencies_1_eu(freq, changes, folder_name)
-        # else:
-        #     draw_frequencies_1(freq, folder_name)
-        # cols = list(freq.keys())
-        # df = pd.DataFrame(columns=cols)
-        # for col in cols:
-        #     df[col] = freq[col]
-        # df.to_csv(folder_name+r'/df_freq_b1_' + str(Time) + '.csv', mode='w+', header=True)
+        freq, changes = return_frequencies_1(Betti_1_total_vector, Time)
+        if model == 1:
+            draw_frequencies_1_eu(freq, changes, folder_name)
+        else:
+            draw_frequencies_1(freq, folder_name)
+        cols = list(freq.keys())
+        df = pd.DataFrame(columns=cols)
+        for col in cols:
+            df[col] = freq[col]
+        df.to_csv(folder_name+r'/df_freq_b1_' + str(Time) + '.csv', mode='w+', header=True)
         # Fr_b1_array += [freq]
 
         """DF freq b2"""
@@ -284,9 +284,9 @@ if not file:
         #     f.write(str(ele)+', ')
         # f.close()
         #
-        print("Plotting the growth rates of Betti numbers and the perimeter...")
-        plot_b_per(Betti_1_total_vector, Betti_2_total_vector, Per_2d, Per_3d, Time, int(Time/3), folder_name, model)
-        #
+        # print("Plotting the growth rates of Betti numbers and the perimeter...")
+        # plot_b_per2(Betti_1_total_vector, Betti_2_total_vector, Per_2d, Per_3d, Time, 0, folder_name, model, 12)
+
         if model != 1:
             print("Plotting the frequency of the number of top dimensional holes for specific shapes with 3 and 4 cells...")
             Tricube, Tricube_f, Tetracube, Tetracube_f = num_holes(Created_holes, Holes)
@@ -336,7 +336,24 @@ df_b1 = pd.read_csv(folder_name_cluster+'b1.csv', header=None)
 df_b2 = pd.read_csv(folder_name_cluster+'b2.csv', header=None)
 df_p2 = pd.read_csv(folder_name_cluster+'p2.csv', header=None)
 df_p3 = pd.read_csv(folder_name_cluster+'p3.csv', header=None)
+
 plot_b_per(df_b1.mean(), df_b2.mean(), df_p2.mean(), df_p3.mean(), Time, int(Time/3), folder_name_cluster, model)
+plot_b_per2(df_b1.mean(), df_b2.mean(), df_p2.mean(), df_p3.mean(), Time, 0, folder_name, model, 14,1)
+a=1
+
+"""FREQUENCIES BETTI"""
+# b1
+for i in range(df_b1.shape[0]):
+    b1 = list(df_b1.loc[i])
+    changes = [b1[i+1]-b1[i] for i in range(len(b1)-1)]
+    counter = collections.Counter(changes)
+    s = sum(counter.values())
+    for key in counter:
+        counter[key] /= s
+    with open(folder_name_cluster+'/b1_freq.csv', 'a+') as f:
+            writer = csv.writer(f)
+            writer.writerow(counter.values())
+
 #
 # """Holes N clusters"""
 # #created
@@ -467,7 +484,102 @@ plot_b_per(df_b1.mean(), df_b2.mean(), df_p2.mean(), df_p3.mean(), Time, int(Tim
 # df2.to_csv(r'experiments/perimeter/df2_' + str(Time) + '.csv', mode='a+', header=False)
 
 print("WE ARE DONE! CHECK THE FOLDER!")
+plot_b_per2(Betti_1_total_vector, Betti_2_total_vector, Per_2d, Per_3d, Time, 0, folder_name, model, 14,1)
+def plot_b_per2(b1, b2, p2, p3, time, N, folder_name, m, fs, lw):
+    fig, ax = plt.subplots()
+    # n = int(time/10)
+    n = 100
+    nn = n
 
+    def func2(x, a, b, c):
+        return a * x ** b + c
+    ydata_f = b1
+    xdata_f = range(len(ydata_f))
+    ydata = ydata_f[N:]
+    xdata = xdata_f[N:]
+    plt.xscale('log')
+    plt.yscale('log')
+    # plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+    # plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+
+    plt.plot(xdata_f[n:], ydata_f[n:], 'm-', label=r'$\beta_1(t)$',  linewidth=lw)
+
+    if m != 1:
+        try:
+            popt, pcov = curve_fit(func2, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+        except RuntimeError:
+            popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
+
+        plt.plot(xdata_f[n:], func2(xdata_f[n:], *popt), 'm--', label=r'$\beta_1(t)=%5.2f t^{%5.2f}%+5.1f$' % tuple(popt), linewidth=lw)
+
+        ydata_f = b2
+        xdata_f = range(len(ydata_f))
+        ydata = ydata_f[N:]
+        xdata = xdata_f[N:]
+        plt.plot(xdata_f[n:], ydata_f[n:], 'b-', label=r'$\beta_2(t)$',  linewidth=0.75)
+        try:
+            popt, pcov = curve_fit(func2, xdata, ydata)
+        except RuntimeError:
+            popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -5000], [1., 2, 4000]))
+        plt.plot(xdata_f[n:], func2(xdata_f[n:], *popt), 'b--', label=r'$y=%5.2f x^{%5.2f}%+5.2f$' % tuple(popt),  linewidth=lw)
+
+        # Constrain the optimization to the linear function
+        try:
+            popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -np.inf], [1., 1., np.inf]))
+        except ValueError:
+            popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -5000], [1., 1., 10]))
+
+        plt.plot(xdata_f[nn+n:], func2(xdata_f[nn+n:], *popt), 'g--', label=r'$y=%5.2f x^{%5.2f}%+5.1f$' % tuple(popt),  linewidth=lw)
+
+    def func(x, a, b):
+        return a * x ** b
+    if m == 1:
+        try:
+            popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+        except RuntimeError:
+            popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
+        if popt[1] > 1.05:
+            try:
+                popt, pcov = curve_fit(func2, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+            except RuntimeError:
+                popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
+
+            plt.plot(xdata_f[n:], func2(xdata_f[n:], *popt), 'm--', label=r'$\beta_1(t)=%5.2f t^{%5.2f}%+5.1f$' % tuple(popt), linewidth=lw)
+        else:
+            plt.plot(xdata_f[n:], func(xdata_f[n:], *popt), 'm--', label=r'$\beta_1(t)=%5.2f t^{%5.2f}$' % tuple(popt), linewidth=lw)
+
+    ydata = p2
+    xdata = range(len(ydata))
+    plt.plot(xdata[n:], ydata[n:], color='orange', linestyle='solid', label=r'$P_{2}(t)$',  linewidth=lw)
+    popt, pcov = curve_fit(func, xdata, ydata)
+    plt.plot(xdata[n:], func(xdata[n:], *popt), color='orange', linestyle='dashed', label=r'$P_2(t)=%5.2f t^{%5.2f}$' % tuple(popt),  linewidth=lw)
+    ydata = p3
+    xdata = range(len(ydata))
+    plt.plot(xdata[n:], ydata[n:], color='deepskyblue', linestyle='solid', label=r'$P_{3}(t)$',  linewidth=lw)
+    popt, pcov = curve_fit(func, xdata, ydata)
+    plt.plot(xdata[n:], func(xdata[n:], *popt), color='deepskyblue', linestyle='dashed', label=r'$P_3(t)=%5.2f t^{%5.2f}$' % tuple(popt),  linewidth=lw)
+
+    # font = {'size': fs}
+    # plt.rc('font', **font)
+
+    plt.xlabel('t')
+    plt.ylabel('Growth Rates')
+    handles, labels = ax.get_legend_handles_labels()
+    myorder = [0, 2, 4, 1, 3, 5]
+    handles = [handles[i] for i in myorder]
+    labels = [labels[i] for i in myorder]
+    # plt.legend(handles, labels, prop={'size': 6}, loc='lower right', ncol=2)
+    plt.legend(handles, labels, loc='lower right', ncol=2)
+    # plt.legend(loc=4, prop={'size': 6})
+    # plt.rc('xtick', labelsize=fs)
+    # plt.rc('ytick', labelsize=fs)
+    # plt.rc('axes', labelsize=fs)
+    plt.rcParams.update({'font.size': fs, 'font.weight': 'light'})
+    plt.tight_layout()
+    plt.savefig(folder_name+'/per-b-time-big.png', dpi=400)
+    plt.savefig(folder_name+'/per-b-time-big.pdf', dpi=400)
+    plt.close()
+plot_b_per(Betti_1_total_vector, Betti_2_total_vector, Per_2d, Per_3d, Time, 0, folder_name, model)
 # def plot_per_inner2(p2, p3, time, folder_name):
 #     n = int(0.25*len(p2))
 #     from scipy.optimize import curve_fit
