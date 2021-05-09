@@ -350,9 +350,50 @@ for i in range(df_b1.shape[0]):
     s = sum(counter.values())
     for key in counter:
         counter[key] /= s
-    with open(folder_name_cluster+'/b1_freq.csv', 'a+') as f:
+    print(counter)
+    with open('experiments/FREQ_B/MODEL 1'+'/b1_freq.csv', 'a+') as f:
             writer = csv.writer(f)
             writer.writerow(counter.values())
+fold = 'experiments/FREQ_B/df_all_500000.csv'
+df_b_ = pd.read_csv(fold, low_memory=False)
+dfs_b = [df_b_[:500000], df_b_[500001:1000001], df_b_[1000002:1500002], df_b_[1500003:2000003]]
+for j in range(len(dfs_b)):
+    b1 = list(dfs_b[j]['b1'])
+    b1 = [int(x) for x in b1]
+    changes = [b1[i+1]-b1[i] for i in range(len(b1)-1)]
+    counter = collections.Counter(changes)
+    s = sum(counter.values())
+    for key in counter:
+        counter[key] /= s
+    print(j, counter)
+    print(counter.values())
+    if j < 3:
+        with open('experiments/FREQ_B/MODEL 0'+'/b1_freq.csv', 'a+') as f:
+            writer = csv.writer(f)
+            writer.writerow(counter.values())
+    else:
+        with open('experiments/FREQ_B/MODEL 1'+'/b1_freq.csv', 'a+') as f:
+            writer = csv.writer(f)
+            co = sorted(list(counter.values()), reverse=True)
+            print(co)
+            writer.writerow(co)
+
+fold = 'experiments/FREQ_B/MODEL 0/600000.csv'
+df_b_ = pd.read_csv(fold, low_memory=False)
+b1 = list(df_b_['# b1'])
+b1 = b1[:500000]
+changes = [b1[i+1]-b1[i] for i in range(len(b1)-1)]
+counter = collections.Counter(changes)
+s = sum(counter.values())
+for key in counter:
+    counter[key] /= s
+print(counter)
+with open('experiments/FREQ_B/MODEL 0'+'/b1_freq.csv', 'a+') as f:
+    writer = csv.writer(f)
+    writer.writerow(counter.values())
+
+fold = 'experiments/FREQ_B/MODEL 0/b1_freq.csv'
+b1_fr = pd.read_csv(fold, low_memory=False,header=None)
 
 #
 # """Holes N clusters"""
