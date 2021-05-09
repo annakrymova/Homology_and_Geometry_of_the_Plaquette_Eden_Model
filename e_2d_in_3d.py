@@ -10,9 +10,12 @@ from scipy.optimize import curve_fit
 import gudhi as gd
 import re
 import itertools
+import os
+from datetime import datetime
 
 """GROWING"""
 def grow_eden(t, model):
+    print("Building a model...")
     vertices = 4
     edges = 4
 
@@ -466,8 +469,6 @@ def actualize_neighbors(tile_selected, eden, perimeter, shift_neighbors):
     nearest_n = [0]*4
     new = [0]*12
     for i, n in enumerate(nearest_tiles):
-        # if n[2] <= 0:
-        #     continue
         if n in eden:
             eden[n][1] += 1
             if eden[n][0] == 1:
@@ -732,6 +733,7 @@ def bars_from_tree(b, tag):
     return bars
 
 def num_holes(created_holes, holes):
+    print("Plotting the frequency of the number of top dimensional holes for specific shapes with 3 and 4 cells...")
     tricube = dict.fromkeys(['l','i'], 0)
     tricube_f = dict.fromkeys(['l','i'], 0)
     tetracube = dict.fromkeys(['I', 'L', 'T', 'O', 'Z', 'Tower', 'Tripod'], 0)
@@ -844,14 +846,12 @@ def draw_square(x0, y0, z0, d, ax, alpha=1, col='gray', ls=0.495):
     """d = 1 if square is parallel to xOy, d = 2 if x0z, d = 3 if y0z"""
     """ls is a half of square side"""
     if d == 0:
-        # col = 'blue'
         y = np.linspace(y0-ls, y0+ls, num=2)
         z = y + z0 - y0
         y, z = np.meshgrid(y, z)
         x = np.ones((y.shape[0], y.shape[1])) * x0
         ax.plot_surface(x, y, z, color=col, alpha=alpha, linewidth=0, antialiased=True)
     if d == 1:
-        # col = 'red'
         x = np.linspace(x0-ls, x0+ls, num=2)
         z = x + z0 - x0
         x, z = np.meshgrid(x, z)
@@ -894,15 +894,12 @@ def draw_eden(eden, folder_name, t, tile=None):
 
     for x in eden:
         if eden[x][0] == 1:
-            draw_square(x[0], x[1], x[2], x[3], ax=ax, col='#0077df')#'tab:blue')
-        # else:
-        #     draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.4, col='grey')
+            draw_square(x[0], x[1], x[2], x[3], ax=ax, col='grey')
     draw_square(0, 0, 0.5, 2, ax=ax, col='green')
     if tile is not None:
         draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, col='orange')
 
     plt.savefig(folder_name+'/eden'+str(t)+'.png', format='png', dpi=500)
-    plt.savefig(folder_name+'/eden'+str(t)+'.pdf')
     plt.show()
     plt.close()
 
@@ -918,24 +915,16 @@ def draw_complex(eden, time, folder_name, tile=None):
     ax.w_xaxis.pane.fill = False
     ax.w_yaxis.pane.fill = False
     ax.w_zaxis.pane.fill = False
-    # add_box(eden, ax)
-    #
-    # add_box(eden, ax, 5)
 
     for x in eden:
-        # if eden[x][0] == 1 and x != tile:
         draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.3, col='dimgray')
-        # if eden[x][0] == 0:
-        #     draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=0.3, col='lightgrey')
-    # for x in tile:
     x = tile
     draw_square(x[0], x[1], x[2], x[3], ax=ax, alpha=1, col='orange')
     draw_square(0, 0, 0.5, 2, ax=ax, col='green')
 
-    # draw_square(0, 0, 0.5, 2, ax=ax, col='green')
-    # draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, col='darkorange')
+    draw_square(0, 0, 0.5, 2, ax=ax, col='green')
+    draw_square(tile[0], tile[1], tile[2], tile[3], ax=ax, col='darkorange')
     plt.savefig(folder_name+'/eden_' + str(time) + '.png', format='png', dpi=500)
-    plt.savefig(folder_name+'/eden_' + str(time) + '.pdf')
     plt.show()
 
 def draw_barcode(barcode, time, folder_name):
@@ -944,7 +933,6 @@ def draw_barcode(barcode, time, folder_name):
         return
     fig = plt.figure()
     plt.style.use('ggplot')
-    # plt.axis('off')
     plt.grid(True)
     plt.rc('grid', linestyle="-", color='gray')
     plt.yticks([])
@@ -957,12 +945,12 @@ def draw_barcode(barcode, time, folder_name):
             plt.plot([x[0], x[1]], [i, i], 'k-', lw=2)
         i = i + 40
     fig.suptitle(r'Persistence Barcode $\beta_2$')
-    fig.savefig(folder_name+'/barcode.png', format='png', dpi=500)
-    fig.savefig(folder_name+'/barcode.pdf', format='pdf', dpi=500)
+    fig.savefig(folder_name+'/barcode_2.png', format='png', dpi=500)
     plt.rcParams.update(plt.rcParamsDefault)
     plt.close()
 
 def draw_barcode_gudhi(barcode, folder_name, num):
+    print("Plotting Betti_2 Barcode...")
     fig, ax = plt.subplots()
     gd.plot_persistence_barcode(persistence=barcode, max_barcodes=10000)
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
@@ -970,20 +958,18 @@ def draw_barcode_gudhi(barcode, folder_name, num):
         plt.title(r'Persistence Barcode $\beta_2$')
     else:
         plt.title(r'Persistence Barcode $\beta_1$')
-    plt.savefig(folder_name+'/barcode_'+str(num)+'.png', dpi=500)
-    plt.savefig(folder_name+'/barcode_'+str(num)+'.pdf')
+    plt.savefig(folder_name+'/barcode_'+str(num)+'_gudhi.png', dpi=500)
     plt.close()
 
 def draw_frequencies_1(dict, folder_name):
     print("\nPlotting frequencies of Betti_1...")
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
+    fig, ax = plt.subplots()
     l = len(dict[0])
 
     sh = []
     for j in np.arange(-1, 3):
         sh.append(next((i for i, x in enumerate(dict[j]) if x), 0))
-    shift = max(sh)*8
+    shift = max(sh)
     mean_values = {x: sum(dict[x][(-int(len(dict[x])/10)):]) / len(dict[x][(-int(len(dict[x])/10)):]) for x in range(-1, 3)}
 
     linew = 1
@@ -1005,24 +991,16 @@ def draw_frequencies_1(dict, folder_name):
     my_yticks2 = [round(x, 3) for x in my_yticks]
     my_yticks[0] += 0.005
     my_yticks[2] -= 0.005
-    # plt.yticks([0.01]+my_yticks, [r'$10^{-2}$']+my_yticks2)
     plt.yticks(my_yticks, my_yticks2)
-    # plt.rcParams.update({'font.size': 6})
     ax.tick_params(axis='y', which='major', labelsize=7)
     ax.tick_params(axis='y', which='minor', labelsize=7)
     ax.legend(loc=1, prop={'size': 6})
     fig.savefig(folder_name+'/fr_b_1.png', format='png', dpi=500)
-    fig.savefig(folder_name+'/fr_b_1.pdf', dpi=500)
     plt.close()
 
 def draw_frequencies_2(dict, folder_name):
     fig, ax = plt.subplots()
     l = len(dict[0])
-
-    # ch_1 = [i for i, j in enumerate(changes) if j == -1]
-    # y_1 = []
-    # for x in ch_1:
-    #     y_1 += [dict[-1][x+1]]
 
     sh = []
     for j in np.arange(-1, 2):
@@ -1049,7 +1027,6 @@ def draw_frequencies_2(dict, folder_name):
     plt.yticks(my_yticks, my_yticks2)
     plt.legend(loc=1, prop={'size': 6})
     fig.savefig(folder_name+'/fr_b_2.png', format='png', dpi=500)
-    fig.savefig(folder_name+'/fr_b_2.pdf')
     plt.close()
 
 def draw_frequencies_2_eu(dict, changes, folder_name):
@@ -1069,7 +1046,6 @@ def draw_frequencies_2_eu(dict, changes, folder_name):
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
     plt.legend(loc=1, prop={'size': 6})
     fig.savefig(folder_name+'/fr_b_2.png', format='png', dpi=500)
-    fig.savefig(folder_name+'/fr_b_2.pdf')
     plt.close()
 
 def draw_frequencies_1_eu(dict, changes, folder_name):
@@ -1113,10 +1089,10 @@ def draw_frequencies_1_eu(dict, changes, folder_name):
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
     ax.legend(loc=1, prop={'size': 6})
     fig.savefig(folder_name+'/fr_b_1.png', format='png', dpi=500)
-    fig.savefig(folder_name+'/fr_b_1.pdf')
     plt.close()
 
 def draw_diagram_holes(created_holes, holes, folder_name):
+    print("Plotting the frequency of the volume of top dimensional \"holes\"...")
     fr_cr = [created_holes[i][-2] for i in range(len(created_holes))]
     fr_cr.sort()
     fr_final = [len(holes[i]) for i in holes]
@@ -1216,12 +1192,10 @@ def draw_diagram_holes(created_holes, holes, folder_name):
     ax.legend(loc=1)
     fig.tight_layout()
     fig.savefig(folder_name+'/holes.png', format='png', dpi=500)
-    fig.savefig(folder_name+'/holes.pdf')
     plt.close()
 
 def draw_diagram_holes2(cr_h, f_h, folder_name, max):
     width = 0.5
-    # max+=1
 
     def func(x, a, b):
         return a * x ** b
@@ -1230,7 +1204,7 @@ def draw_diagram_holes2(cr_h, f_h, folder_name, max):
     ydata = list(cr_h)[:max]
 
     try:
-        popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+        popt, pcov = curve_fit(func, xdata, ydata)
     except RuntimeError:
         popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., -10.], [10000., 10.]))
 
@@ -1250,7 +1224,7 @@ def draw_diagram_holes2(cr_h, f_h, folder_name, max):
     ydata = list(f_h)[:max]
 
     try:
-        popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+        popt, pcov = curve_fit(func, xdata, ydata)
     except RuntimeError:
         popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., -10.], [10000., 10.]))
 
@@ -1281,7 +1255,6 @@ def draw_diagram_holes2(cr_h, f_h, folder_name, max):
     ax.legend(loc=1)
     fig.tight_layout()
     fig.savefig(folder_name+'/holes.png', format='png', dpi=500)
-    fig.savefig(folder_name+'/holes.pdf')
     plt.close()
 
 def draw_tri_tetra(tri, tri_f, tetra, tetra_f, folder_name):
@@ -1304,13 +1277,13 @@ def draw_tri_tetra(tri, tri_f, tetra, tetra_f, folder_name):
         ax.legend()
         fig.tight_layout()
         fig.savefig(folder_name+'/tri-tetra-cubes.png', format='png', dpi=500)
-        fig.savefig(folder_name+'/tri-tetra-cubes.pdf')
         plt.close()
     except ValueError:
         print("No tricubes and tetracubes in this complex")
         plt.close()
 
 def plot_b_per(b1, b2, p2, p3, time, N, folder_name, m):
+    print("Plotting the growth rates of Betti numbers and the perimeter...")
     n = int(time/10)
     nn = n
 
@@ -1322,8 +1295,6 @@ def plot_b_per(b1, b2, p2, p3, time, N, folder_name, m):
     xdata = xdata_f[N:]
     plt.xscale('log')
     plt.yscale('log')
-    # plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
-    # plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
     plt.plot(xdata_f[n:], ydata_f[n:], 'm-', label=r'$\beta_1(t)$ data',  linewidth=0.75)
 
     if m != 1:
@@ -1345,24 +1316,24 @@ def plot_b_per(b1, b2, p2, p3, time, N, folder_name, m):
             popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -5000], [1., 2, 4000]))
         plt.plot(xdata_f[n:], func2(xdata_f[n:], *popt), 'b--', label=r'fit: $y=%5.3f x^{%5.3f}%+5.3f$' % tuple(popt),  linewidth=0.75)
 
-        # Constrain the optimization to the linear function
+        # Constrain the optimization to a linear function
         try:
             popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -np.inf], [1., 1., np.inf]))
         except ValueError:
             popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -5000], [1., 1., 10]))
 
-        plt.plot(xdata_f[nn+n:], func2(xdata_f[nn+n:], *popt), 'g--', label=r'fit: $y=%5.3f x^{%5.3f}%+5.3f$' % tuple(popt),  linewidth=0.75)
+        plt.plot(xdata_f[n:], func2(xdata_f[n:], *popt), 'g--', label=r'fit: $y=%5.3f x^{%5.3f}%+5.3f$' % tuple(popt),  linewidth=0.75)
 
     def func(x, a, b):
         return a * x ** b
     if m == 1:
         try:
-            popt, pcov = curve_fit(func, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+            popt, pcov = curve_fit(func, xdata, ydata)
         except RuntimeError:
             popt, pcov = curve_fit(func, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
         if popt[1] > 1.05:
             try:
-                popt, pcov = curve_fit(func2, xdata, ydata)#, bounds=([0.,0., 1000], [2., 1, 1500]))
+                popt, pcov = curve_fit(func2, xdata, ydata)
             except RuntimeError:
                 popt, pcov = curve_fit(func2, xdata, ydata, bounds=([0., 0., -10], [10., 10., 900]))
 
@@ -1386,7 +1357,6 @@ def plot_b_per(b1, b2, p2, p3, time, N, folder_name, m):
     plt.legend(loc=4, prop={'size': 6})
     plt.tight_layout()
     plt.savefig(folder_name+'/per-b-time.png', dpi=400)
-    plt.savefig(folder_name+'/per-b-time.pdf', dpi=400)
     plt.close()
 
 def plot_b_per2(b1, b2, p2, p3, time, N, folder_name, m, fs, lw):
@@ -1496,14 +1466,10 @@ def plot_per_inner(p2, p3, time, folder_name):
     ydata = p3
     xdata = range(len(ydata))
     plt.plot(xdata, ydata, color='forestgreen', linestyle='solid', label=r'inner $P_{3}(t)$ data',  linewidth=linew)
-    # popt, pcov = curve_fit(func, xdata, ydata)
-    # plt.plot(xdata, func(xdata, *popt), color='lightgreen', linestyle='dashed', label=r'fit: $y=%5.4f x^{%5.3f}$' % tuple(popt),  linewidth=linew)
 
     ydata = p2
     xdata = range(len(ydata))
     plt.plot(xdata, ydata, color='mediumorchid', linestyle='solid', label=r'inner $P_{2}(t)$ data',  linewidth=linew)
-    # popt, pcov = curve_fit(func, xdata, ydata)
-    # plt.plot(xdata, func(xdata, *popt), color='mediumorchid', linestyle='dashed', label=r'fit: $y=%5.6f x^{%5.3f}$' % tuple(popt),  linewidth=linew)
 
     mean_p2 = sum(p2[-int(len(p2)/10):])/len(p2[-int(len(p2)/10):])
     mean_p3 = sum(p3[-int(len(p3)/20):])/len(p3[-int(len(p3)/20):])
@@ -1519,7 +1485,6 @@ def plot_per_inner(p2, p3, time, folder_name):
     my_yticks2 = [round(x, 3) for x in my_yticks]
     plt.yticks(my_yticks, my_yticks2)
     plt.savefig(folder_name+'/per-inner.png', dpi=500)
-    plt.savefig(folder_name+'/per-inner.pdf', dpi=500)
     plt.close()
 
 def plot_per_inner2(p2, p3, time, folder_name):
@@ -1546,26 +1511,18 @@ def plot_per_inner2(p2, p3, time, folder_name):
     plt.plot(xdata[n:], func(xdata[n:], *popt), color='mediumorchid', linestyle='dashed', label=r'fit: $y=%5.6f x^{%5.3f}$' % tuple(popt),  linewidth=linew)
 
     mean_p2 = sum(p2[-int(len(p2)/10):])/len(p2[-int(len(p2)/10):])
-    # mean_p3 = sum(p3[-int(len(p3)/20):])/len(p3[-int(len(p3)/20):])
-    #
-    # plt.plot(range(time), [mean_p3]*time, color='forestgreen', linestyle='--', linewidth=0.75)
     plt.plot(range(time), [mean_p2]*time, color='mediumorchid', linestyle='--', linewidth=0.75)
 
     plt.xlabel('t')
     plt.ylabel('Fraction of the Perimeter')
     plt.legend(loc=4, prop={'size': 6})
-    # my_yticks = [mean_p2, mean_p3]
-    # my_yticks2 = [round(x, 3) for x in my_yticks]
-    # plt.yticks(my_yticks, my_yticks2)
     plt.savefig(folder_name+'/per-inner.png', dpi=500)
-    plt.savefig(folder_name+'/per-inner.pdf', dpi=500)
     plt.close()
 
 def draw_square_0(x, y, col='gray', alpha=1, ls=0.35):
     """With center at x, y draw a square of area 1"""
     """it's area is actually 4ls^2, isn't it?"""
     """ls is a half of square side"""
-    # plt.grid(True)
     plt.fill([x - ls, x + ls, x + ls, x - ls], [y - ls, y - ls, y + ls, y + ls], alpha=alpha, color=col)
 
 def read_barcode_b1_from_file(folder_name):
@@ -1582,7 +1539,8 @@ def read_barcode_b1_from_file(folder_name):
     return Barcode_b1
 
 def draw_pers_diagram(barcode1, barcode2, size, folder_name, p2):
-    barcode1 = [x for x in barcode1 if x[0] > size / 100 and x[1] - x[0] > size / 1000 and x[1] != float('inf')]
+    # barcode1 = [x for x in barcode1 if x[0] > size / 100 and x[1] - x[0] > size / 1000 and x[1] != float('inf')]
+    # barcode1 = [x for x in barcode1 if x[0] > size / 100 and x[1] - x[0] > size / 1000]
     x = [x[0] for x in barcode1]
     y = [x[1] - x[0] for x in barcode1]
     plt.yscale('log')
@@ -1607,7 +1565,6 @@ def draw_pers_diagram(barcode1, barcode2, size, folder_name, p2):
     # plt.plot(list(di2.keys()), list(di2.values()), color='navy')
 
     plt.savefig(folder_name+'/pers-d.png', dpi=200)
-    plt.savefig(folder_name+'/pers-d.pdf', dpi=200)
     plt.close()
 
 def get_inner_per(eden, holes):
@@ -1625,3 +1582,17 @@ def get_inner_per(eden, holes):
 def get_inner_per_3(voids):
     inner_voids = [x for x in voids if voids[x][-3] !=0]
     return inner_voids
+
+def create_directory(time, m, model):
+    now = datetime.now()
+    dt_string = now.strftime("%d.%m.%Y_%H.%M.%S" + str(m) + '_' + str(model))
+    if time >= 1000:
+        t = int(time / 1000)
+        folder_name = str(t) + 'k_' + dt_string
+    else:
+        t = time
+        folder_name = str(t) + '_' + dt_string
+
+    folder_name = 'exp/' + folder_name
+    os.makedirs(folder_name)
+    return folder_name
