@@ -1498,6 +1498,6 @@ def create_directory(time, m, model):
         t = time
         folder_name = str(t) + '_' + dt_string
 
-    folder_name = 'exp/' + folder_name
+    folder_name = 'experiments/' + folder_name
     os.makedirs(folder_name)
     return folder_name

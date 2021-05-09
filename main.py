@@ -27,25 +27,26 @@ def read_value_int():
 
 print('Welcome to the Plaquette EDEN Model!')
 
-print('Do you have a file with a model? \n0 -- you want to generate a new model \n1 -- you have a file')
-file = bool(read_value([0, 1]))
+# print('Do you have a file with a model? \n0 -- you want to generate a new model \n1 -- you have a file')
+# file = bool(read_value([0, 1]))
+file = 0
 
 print(
-    'Which type of model? \n0 -- plaquette eden model \n1 -- euler-characteristic mediated plaquette eden model'
+    'Specify the model type:  \n0 -- plaquette eden model \n1 -- euler-characteristic mediated plaquette eden model'
     '\n2 -- filled-in cubes plaquette eden model')
 model = read_value([0, 1, 2])
 
-print('Do you want a picture of your model? (with a large model it can take time)  \n0 -- no \n1 -- yes')
+print('Do you want a picture of your model? (for a large model, this may takea long time)  \n0 -- no \n1 -- yes')
 pic = bool(read_value([0, 1]))
 
 if pic:
-    print('Do you want Python or MAYA 3D model? (We wouldn\'t recommend Python for large models (more than 500 tiles)).'
+    print('Do you want Python or MAYA 3D model? (we would not recommend Python for models of size more than 500 cells).'
           ' \n0 -- Python \n1 -- MAYA')
     maya = bool(read_value([0, 1]))
 
 """NO FILE CASE"""
 if not file:
-    print('How many tiles would you like in your model?')
+    print('How many cells would you like in your model?')
     Time = read_value_int()
 
     print('How many models would you like to build?')
@@ -167,12 +168,6 @@ if not file:
 #                 "\n\tcmds.move(Eden[i][0],Eden[i][1],Eden[i][2],aux)")
 #         f.close()
 #         print("We created txt file \"MAYA\" for you. Just copy paste its content to MAYA!")
-
-# df.to_csv(r'experiments/perimeter/df_' + str(Time) + '.csv', mode='a+', header=False)
-#
-# df2 = pd.concat([df.mean(axis=0), df.std(axis=0)], axis=1)
-# df2 = df2.rename(columns={0: "Mean", 1: "SD"})
-# df2.to_csv(r'experiments/perimeter/df2_' + str(Time) + '.csv', mode='a+', header=False)
 
 print("WE ARE DONE! CHECK THE FOLDER!")
 
