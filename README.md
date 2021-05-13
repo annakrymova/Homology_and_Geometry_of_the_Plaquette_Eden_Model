@@ -12,19 +12,18 @@ LICENSE: GNU GENERAL PUBLIC LICENSE (see license.txt)
 
 ## Overview 
 This package includes software to run simulations of the Plaquette Eden Model, which is a discrete 2-dimensional stochastic cell growth process defined on the 3-dimensional regular cubical tessellation of the Euclidian space.  The sofrware analyzes the topology (Betti numbers and persistent homology) and local geometry of the structure. 
-For graphical representation, the program can create a picture of the Plaquette Eden Model, or alternitevly can output a .txt file which can be inputed to MAYA to produce an interactive 3-dimensional image.
+The program also has visualization capabilities and can produce a picture of the Plaquette Eden Model or output a .txt file that can be used with Autodesk Maya to produce an interactive 3-dimensional image.
 
 Ripser and GUDHI are used to compute and visulize persistent homology of the the Plaquette Eden Model. If you use this functionality, make sure to cite this library.
 
 To represent the topology and local geometry of the Eden growth model, the software can build plots showing the following:
-* the frequencies of the changes in Betti numbers (Figure 6.1 in the paper),
-* the distribution of volumes of top dimensional "holes" (the finite components of the complement of the structure due to Alexander duality, Figure 6.5 in the paper),
-* the growth of the Betti numbers and the perimeter (Figure 6.2 in the paper),
-* in two and three dimensions, the frequencies of top dimensional holes with specific shapes with 3 and 4 cells (Table 6.4 in the paper) 
-
-The folder *2d/files* contains the data of the 2D simulations that were used in the paper TOPOLOGY AND LOCAL GEOMETRY OF THE EDEN MODEL https://arxiv.org/pdf/2005.12349.pdf.
-
-All plots and graphs are saved in the project folder.
+* the frequencies of the changes in Betti numbers (Figure 29 in the thesis),
+* the distribution of volumes of top dimensional "holes" (the finite components of the complement of the structure due to Alexander duality, Figure 33 in the paper),
+* the frequencies of top dimensional holes with specific shapes with 3 and 4 cells (Figure 32 in the thesis),
+* the growth of the Betti numbers and the perimeter (Figures 26 and 28 in the thesis),
+* persistent homology barcode (Figure 37 in the thesis).
+ 
+All plots and data files are saved in the project folder.
 
 ## Acknowledgments
 Erika Roldan was supported in part by NSF-DMS #1352386 and NSF-DMS #1812028 during 2018-2019. <br />
@@ -33,7 +32,6 @@ Marie Skłodowska-Curie grant agreement No. 754462.
 
 ## Citations 
 
-If you use this code, cite the paper TOPOLOGY AND LOCAL GEOMETRY OF THE EDEN MODEL. 
 If you use the computations and visualization of persistent homology, cite the Ripser and the GUDHI packages.
 
 ## Dependencies:
@@ -67,70 +65,61 @@ conda install -c conda-forge/label/cf202003 gudhi
 ```
 
 ## Usage
-Download the whole folder and run the file *main.py*.<br />
-At first, the system will ask you to enter the dimension:
+Installation and usage are done through the Command Line Interface. It is expected that a Unix-like system is used, such as Mac OS X or any Linux flavor. For Windows users, we advise looking into Windows Subsystem for Linux (WSL). On the operational system, Python 3 and Git should be installed. Run the following commands to obtain the Plaquette Eden Model package:
 ```
-Please, enter the desired dimension of your model (from 2 to 5): 
+git clone https://github.com/annakrymova/Homology_and_Geometry_of_the_Plaquette_Eden_Model.git
+cd ./Homology_and_Geometry_of_the_Plaquette_Eden_Model
 ```
-Then, you have to specify if you have a file with a pre-defined model or not:
+Then, we suggest to create a virtual environment and install all required libraries, using the following commands:
 ```
-Do you have a file with a model? 
-0 -- you want to generate a new model 
-1 -- you have a file
+python3 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
 ```
-In the case of а 2d or а 3d model, on the next step you decide if you want a picture:
+To launch the application, use the following command:
 ```
-Do you want a picture of your model? (with a large model it can take time)  
-0 -- no 
-1 -- yes
+python3 ./main.py
 ```
-In case you want to read the cubical complex from a file, the program asks you to specify the file format:
+
+At first, the system will ask you to choose the type of model
 ```
-What is the format of the file? 
-0 -- list of tuples 
-1 -- Perseus
+Specify the model type: 
+    0 -- plaquette eden model 
+    1 -- euler-characteristic mediated plaquette eden model
+    2 -- filled-in cubes plaquette eden model
 ```
-And then you should give a name of a file. Important: the file should be in the folder *files* inside the folder with the corresponding dimension, e.g. *5d/files*.
+
+At the next step, you decide if you want a picture:
 ```
-Name of the file (for example, filename.txt):
+Do you want a picture of the model? (for a large model, this may take a long time) 
+    0 -- no 
+    1 -- yes
 ```
-If you chose to generate a new model, then now the system asks you to enter the size of the model:
+If a positive answer to the previous question was given, then you chooses the way to visualize the model:
 ```
-How many tiles would you like in your model?
+Do you want Python or MAYA 3D model? (we would not recommend Python for models of size more than 500 cells). 
+    0 -- Python 
+    1 -- MAYA
+```
+Then, the system asks you to enter the size of the model:
+```
+How many cells would you like in your model?
 ```
 And then you have to specify the number of models you want to generate:
 ```
 How many models would you like to build?
 ```
-In the end, the program asks you if you want to generate GUDHI barcodes:
-```
-Do you want GUDHI barcode(s)? 
-0 -- no 
-1 -- yes
-```
-and if yes, it asks you to specify the minimum length of the interval for every barcode (depending on the dimension of the model).
-It is done in order to omit short-lived homology groups, i.e. short intervals.
-<br />
+
 After that, the modeling and analysis take place.  
-<br />
+
 When all calculations are finished, you will see the sentence:
 ```
 WE ARE DONE! CHECK THE FOLDER!
 ```
-Now, you are welcome to check the results in the corresponding folder. 
-<br />
-In case you have analyzed a model from a file, the program creates a folder that has the name of the file inside the folder with the corresponding dimension.
-For example, if you analyze a 3-dimension model from a file *data.txt*, then the analysis results can be found in the folder:
+Now, you can check the results in the corresponding folder. The results of the obtained models are saved in the folders of the format *#cells_date_time_model* inside the *experiments* folder. For example, if one simulated two Filled-In Cubes Plaquette Eden Models with 10,000 cells each, possible two folders that software will generate are:
 ```
-3d/data.txt
-```
-Otherwise, that is, if you generate your own models. The results of the obtained models are saved in the folders *#tiles_date_time* inside the folder with the corresponding dimension.
-For example, if you generate two 4-dimensional models with 10 000 tiles each, possible two folders that software will generate are:
-```
-4d/10k_11/12/2020_15.07.04
-```
-```
-4d/10k_11/12/2020_15.07.21
+    10k_09.05.2021_14.32.080_2
+    10k_09.05.2021_14.32.471_2.
 ```
 
 
