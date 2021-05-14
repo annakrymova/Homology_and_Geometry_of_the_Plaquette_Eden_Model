@@ -348,7 +348,7 @@ def create_dist_matrix(Time, eden, num_vert, folder_name):
     dict_vert = {}
     vertex_num = 0
 
-    print("\nCreating distance matrix")
+    print("\nCreating distance matrix...")
     pbar = tqdm(total=len(eden))
 
     for t, x in enumerate(eden):
@@ -1323,7 +1323,7 @@ def draw_tri_tetra(tri, tri_f, tetra, tetra_f, folder_name):
         plt.close()
 
 def plot_b_per(b1, b2, p2, p3, time, N, folder_name, m):
-    print("Plotting the growth rates of Betti numbers and the perimeter...")
+    print("\nPlotting the growth rates of Betti numbers and the perimeter...")
     n = int(time/10)
     nn = n
 
@@ -1725,6 +1725,6 @@ def create_directory(time, m, model):
         t = time
         folder_name = str(t) + '_' + dt_string
 
-    folder_name = 'exp/' + folder_name
+    folder_name = 'experiments/' + folder_name
     os.makedirs(folder_name)
     return folder_name
