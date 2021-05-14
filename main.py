@@ -1368,7 +1368,7 @@ plot_per_inner2(p2, p3, 1000000, 'experiments', 14)
 
 fold = 'experiments/holes_final_10.csv'
 polyc_f = pd.read_csv(fold, low_memory=False)
-p = np.array(polyc,dtype=float)
+p = np.array(polyc_f,dtype=float)
 for i in p:
     s = i[1]+i[2]
     i[1] = i[1]/s
@@ -1377,7 +1377,7 @@ for i in p:
     for j in range(len(i[3:])):
         i[3+j] /= s
 final_polycube = [round(x, 3) for x in p.mean(axis=0)]
-columns = list(polyc.columns)
+columns = list(polyc_f.columns)
 Tricube_f = dict(zip(columns[1:3], final_polycube[1:3]))
 Tetracube_f = dict(zip(columns[3:], final_polycube[3:]))
 
@@ -1409,7 +1409,7 @@ def draw_tri_tetra2(tri, tri_f, tetra, tetra_f, folder_name,fs):
         # Add some text for labels, title and custom x-axis tick labels, etc.
         plt.rcParams.update({'font.size': fs, 'font.weight': 'light'})
         ax.set_ylabel('Number of Polycubes')
-        ax.set_xlabel('Type of a Polycybe')
+        ax.set_xlabel('Type of a Polycube')
         ax.set_xticks(x)
         ax.set_xticklabels(labels,fontsize = 12)
         ax.legend()
