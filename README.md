@@ -8,7 +8,7 @@ Erika Roldan (erika.roldan@ma.tum.de) <br />
 
 DATE: MAY 15, 2021
 
-LICENSE: GNU GENERAL PUBLIC LICENSE (see license.txt)
+LICENSE: GNU GENERAL PUBLIC LICENSE (see LICENSE)
 
 ## Overview 
 This package includes software to run simulations of the Plaquette Eden Model, which is a discrete 2-dimensional stochastic cell growth process defined on the 3-dimensional regular cubical tessellation of the Euclidian space.  The sofrware analyzes the topology (Betti numbers and persistent homology) and local geometry of the structure. 
