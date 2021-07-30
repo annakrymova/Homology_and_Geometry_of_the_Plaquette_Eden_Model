@@ -47,7 +47,8 @@ if pic:
           ' \n0 -- Python \n1 -- MAYA')
     maya = bool(read_value([0, 1]))
 
-print('How many cells would you like in your model?')
+print('How many cells would you like in your model?'
+      '\n The number should be at least 1000.')
 Time = read_value_int()
 
 print('How many models would you like to build?')
