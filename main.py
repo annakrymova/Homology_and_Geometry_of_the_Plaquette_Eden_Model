@@ -1,3 +1,8 @@
+"""
+@author: Anna Krymova (anna.krymova@tum.de)
+@author: Erika Roldan (erika.roldan@ma.tum.de)
+"""
+
 from e_2d_in_3d import num_holes, grow_eden, return_frequencies_1, return_frequencies_2, draw_frequencies_1,\
             draw_frequencies_2, draw_diagram_holes, draw_tri_tetra, plot_b_per, draw_eden, draw_frequencies_1_eu,\
             draw_barcode_gudhi, create_dist_matrix, plot_per_inner, read_barcode_b1_from_file,  draw_pers_diagram,\

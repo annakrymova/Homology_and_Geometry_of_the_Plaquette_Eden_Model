@@ -1,3 +1,8 @@
+"""
+@author: Anna Krymova (anna.krymova@tum.de)
+@author: Erika Roldan (erika.roldan@ma.tum.de)
+"""
+
 import sys
 from tqdm import tqdm
 import random
